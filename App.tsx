@@ -1,57 +1,45 @@
-import React, { useState } from 'react';
-import { View, Text, Button, StyleSheet } from 'react-native';
-import SuccessModal from './components/modalSucesso';
-import ModalConfirmacaoDelete from './components/modalConfirmacaoDelete';
-import Botoes from './components/botoesEdicaoExclusao';
+import React from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+import CadastroDespesasReceitas from './pages/cadastros/CadastroDespesasReceitas';
+import PainelDespesasReceitas from './pages/painel/PainelDespesasReceitas';
+import { Navbar } from './components/navbar';
+import PainelCategorias from './pages/painel/painelCategorias';
+import PainelMetas from './pages/painel/painelMetas';
+import PainelRelatorios from './pages/painel/painelRelatorios';
+import PainelOrcamentos from './pages/painel/painelOrcamentos';
+
+// Defina o tipo de rotas para o Stack.Navigator
+export type RootStackParamList = {
+  Navbar: undefined;
+  CadastroDespesasReceitas: undefined;
+  PainelDespesasReceitas: undefined;
+  Categorias: undefined;
+  Metas: undefined;
+  MeusRelatorios: undefined;
+  Orcamentos: undefined;
+};
+
+const Stack = createStackNavigator<RootStackParamList>();
 
 export default function App() {
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [showSuccessModalDelete, setShowSuccessModalDelete] = useState(false);
-  const [showAskDeleteModal, setShowAskDeleteModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [showDeleteButton, setShowDeleteButton] = useState(false);
-
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Open up App.tsx start working on your app!</Text>
-      
-      <Button title="Show Success Modal" onPress={() => setShowSuccessModal(true)} />
-      <Button title="Show Success Modal Delete" onPress={() => setShowSuccessModalDelete(true)} />
-      <Button title="Show Ask Delete Modal" onPress={() => setShowAskDeleteModal(true)} />
-      <Button title="Mostrar Botão de Exclusão" onPress={() => setShowDeleteButton(true)} />
-      <Button title="Mostrar Botão de Edição" onPress={() => setShowEditModal(true)} />
-
-      {/* Modal de Sucesso */}
-      {showSuccessModal && (
-        <SuccessModal onClose={() => setShowSuccessModal(false)} nome="parametro" tipoSucesso='cadastrado' />
-      )}
-      {showSuccessModalDelete && (
-        <SuccessModal onClose={() => setShowSuccessModalDelete(false)} nome="parametro" tipoSucesso='excluído' />
-      )}
-      {/* Modal de Confirmar Delete */}
-      {showAskDeleteModal && (
-        <ModalConfirmacaoDelete onClose={() => setShowAskDeleteModal(false)} nome="parametro" />      
-      )}
-      {/* Botões de Exclusão e Edição */}
-      {showDeleteButton && (
-          <Botoes tipo="excluir" onClickExcluir={() => setShowDeleteButton(false)} />
-      )}
-      {showEditModal && (
-          <Botoes tipo="editar" onClickEditar={() => setShowEditModal(false)} />
-      )}
-
-    </View>
+    <NavigationContainer>
+      <Stack.Navigator initialRouteName="Navbar">
+        {/* Definindo a Navbar como a tela inicial */}
+        <Stack.Screen 
+          name="Navbar" 
+          component={Navbar} 
+          options={{ headerShown: false }}  // Oculta o cabeçalho padrão do Stack
+        />
+        {/* Definindo as outras rotas */}
+        <Stack.Screen name="CadastroDespesasReceitas" component={CadastroDespesasReceitas} />
+        <Stack.Screen name="PainelDespesasReceitas" component={PainelDespesasReceitas} />
+        <Stack.Screen name="Categorias" component={PainelCategorias} />
+        <Stack.Screen name="Metas" component={PainelMetas} />
+        <Stack.Screen name="MeusRelatorios" component={PainelRelatorios} />
+        <Stack.Screen name="Orcamentos" component={PainelOrcamentos} />
+      </Stack.Navigator>
+    </NavigationContainer>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'white',
-  },
-  title: {
-    marginBottom: 16,
-  },
-});
