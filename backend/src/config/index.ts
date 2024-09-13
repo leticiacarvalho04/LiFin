@@ -1,25 +1,16 @@
-// src/config/firebase.ts
-import firebase from 'firebase/compat/app';
-import 'firebase/compat/firestore';
-import 'firebase/compat/auth'; // Se você estiver usando autenticação
+import admin from "firebase-admin";
+import dotenv from "dotenv";
 
-// Suas credenciais Firebase
-const firebaseConfig = {
-  apiKey: process.env.FIREBASE_API_KEY,
-  authDomain: process.env.FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.FIREBASE_PROJECT_ID,
-  storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.FIREBASE_APP_ID,
-  measurementId: process.env.FIREBASE_MEASUREMENT_ID, // Opcional
-};
+dotenv.config();
 
-// Inicializa o Firebase
-if (!firebase.apps.length) {
-  firebase.initializeApp(firebaseConfig);
-}
+admin.initializeApp({
+  credential: admin.credential.cert({
+    projectId: process.env.FIREBASE_PROJECT_ID,
+    clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+    privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+  }),
+  databaseURL: process.env.FIREBASE_DATABASE_URL,
+});
 
-const firestore = firebase.firestore();
-const auth = firebase.auth(); // Se estiver usando autenticação
-
-export { firestore, auth };
+const db = admin.firestore();
+export { db };
