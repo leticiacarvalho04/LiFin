@@ -14,7 +14,15 @@ const styles = StyleSheet.create({
     menuContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginTop: 10,
+        marginTop: 35,
+    },
+    menuIcon: {
+        display: 'flex',
+        justifyContent: 'center',
+        textAlign: 'center',
+        alignContent: 'center',
+        alignItems: 'center',
+        alignSelf: 'center',
     },
     sidebar: {
         backgroundColor: '#f4f4f4',

@@ -1,9 +1,12 @@
 import { Text, View } from "react-native";
+import Layout from "../../components/layout";
 
 export default function PainelOrcamentos() {
     return (
-        <View>
-            <Text>Painel de Orçamentos</Text>
-        </View>
+        <Layout>
+            <View>
+                <Text>Painel de Orçamentos</Text>
+            </View>
+        </Layout>
     );
 }

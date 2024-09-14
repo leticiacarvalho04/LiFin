@@ -5,7 +5,7 @@ import Icon from 'react-native-vector-icons/Feather';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import styles from "./styles";
-import { RootStackParamList } from '../../App';
+import { RootStackParamList } from '../../routes';
 
 // Defina o tipo da navegação
 type NavbarProps = StackNavigationProp<RootStackParamList, keyof RootStackParamList>;
@@ -18,6 +18,7 @@ export function Navbar() {
     const slideAnim = useState(new Animated.Value(-width * 0.75))[0]; // Posição inicial fora da tela
 
     const opcoes = [
+        { key: 'Home', label: 'Início', emoji: '🏠' },
         { key: 'CadastroDespesasReceitas', label: 'Anotar despesas e receitas', emoji: '📝' },
         { key: 'PainelDespesasReceitas', label: 'Painel de despesas e receitas', emoji: '🗃' },
         { key: 'Categorias', label: 'Criar categorias', emoji: '🏷️' },
@@ -45,7 +46,7 @@ export function Navbar() {
             {/* Menu Hamburguer estará na sidebar */}
             {!menuVisible && (
                 <View style={styles.menuContainer}>
-                    <TouchableOpacity onPress={toggleMenu}>
+                    <TouchableOpacity style={styles.menuIcon} onPress={toggleMenu}>
                         <Icon name="menu" size={28} color="white" />
                     </TouchableOpacity>
                 </View>
