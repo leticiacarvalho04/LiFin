@@ -1,12 +1,11 @@
 import Categoria from "./categoria";
 
 export default interface Receitas {
-    id: number;
     nome: string;
-    categoria: Categoria;
+    categoriaId: string; // Alterado para string, representando o ID da categoria
     valor: number;
-    data: Date;
+    data: string; // Firestore armazena datas como strings ISO
     descricao: string;
-    created_at: Date;
-    updated_at: Date;
+    created_at: string; // Firestore usa strings ISO para datas
+    updated_at: string; // Firestore usa strings ISO para datas
 }
