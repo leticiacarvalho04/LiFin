@@ -1,26 +1,27 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { TouchableOpacity, View, Text, StyleSheet, ActivityIndicator, TextInput } from 'react-native';
-import { Picker } from '@react-native-picker/picker'; // Importando o Picker para seleção de categorias
+import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import BtnSalvar from './btnSalvar';
-import ModalSucesso from './modalSucesso'; // Certifique-se que o modalSucesso está correto
 import axios from 'axios';
 import { Categoria } from '../types/categoria';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 interface PropsFormulario {
+  fields: string[]; // Nomes dos campos
   values: { [key: string]: any };
   onInputChange?: (field: string, value: any) => void;
-  onSubmit?: () => void;
   onReset?: () => void;
-  btn: { nome: string; tipoSucesso: string, rota: string, formValues: any}; // Adiciona rota e formValues
+  btn: { nome: string; tipoSucesso: string, rota: string, formValues: any };
 }
 
 export default function Formulario(props: PropsFormulario) {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [loadingCategorias, setLoadingCategorias] = useState(false);
+  const inputRefs = useRef<{ [key: string]: any }>({});
 
-  const { values, onInputChange, onSubmit, onReset, btn } = props;
+  const { fields, values, onInputChange, onReset, btn } = props;
 
   useEffect(() => {
     const fetchCategorias = async () => {
@@ -58,15 +59,30 @@ export default function Formulario(props: PropsFormulario) {
     return dateValue ? new Date(dateValue.split('/').reverse().join('-')) : new Date();
   };
 
+  const handleSubmit = (field: string) => {
+    const index = fields.indexOf(field);
+    if (index >= 0 && index < fields.length - 1) {
+      const nextField = fields[index + 1];
+      inputRefs.current[nextField]?.focus();
+    } else {
+      // Enviar o formulário ou fazer outra ação
+    }
+  };
+
   return (
-    <View style={styles.container}>
-      {Object.keys(values).map((key) => (
-        <View key={key} style={styles.inputContainer}>
-          <Text style={styles.label}>{key}</Text>
-          {key === 'Data' ? (
+    <KeyboardAwareScrollView
+      style={styles.container}
+      resetScrollToCoords={{ x: 0, y: 0 }}
+      contentContainerStyle={styles.contentContainer}
+      scrollEnabled={true}
+    >
+      {fields.map((field, index) => (
+        <View key={field} style={styles.inputContainer}>
+          <Text style={styles.label}>{field}</Text>
+          {field === 'Data' ? (
             <>
               <TouchableOpacity onPress={() => setShowDatePicker(true)} style={styles.input}>
-                <Text style={styles.dateText}>{values[key] || 'Selecione a data'}</Text>
+                <Text style={styles.dateText}>{values[field] || 'Selecione a data'}</Text>
               </TouchableOpacity>
               {showDatePicker && (
                 <DateTimePicker
@@ -77,7 +93,7 @@ export default function Formulario(props: PropsFormulario) {
                 />
               )}
             </>
-          ) : key === 'Categoria' ? (
+          ) : field === 'Categoria' ? (
             <>
               {loadingCategorias ? (
                 <ActivityIndicator size="small" color="#0000ff" />
@@ -85,6 +101,7 @@ export default function Formulario(props: PropsFormulario) {
                 <Picker
                   selectedValue={values['Categoria']}
                   onValueChange={(itemValue) => onInputChange && onInputChange('Categoria', itemValue)}
+                  style={styles.input} // Aplica o estilo do input ao Picker
                 >
                   <Picker.Item label="Selecione uma categoria" value="" />
                   {categorias.map((categoria) => (
@@ -95,31 +112,36 @@ export default function Formulario(props: PropsFormulario) {
             </>
           ) : (
             <TextInput
+              ref={(ref) => (inputRefs.current[field] = ref)}
               style={styles.input}
-              placeholder={`Digite ${key}`}
-              value={values[key]}
-              onChangeText={(text) => onInputChange && onInputChange(key, text)}
+              placeholder={`Digite ${field}`}
+              value={values[field]}
+              onChangeText={(text) => onInputChange && onInputChange(field, text)}
+              onSubmitEditing={() => handleSubmit(field)}
+              returnKeyType={index < fields.length - 1 ? 'next' : 'done'}
             />
           )}
         </View>
       ))}
 
-      <BtnSalvar 
-        nome={btn.nome} 
-        tipoSucesso={btn.tipoSucesso} 
-        onReset={onReset} 
+      <BtnSalvar
+        nome={btn.nome}
+        tipoSucesso={btn.tipoSucesso}
+        onReset={onReset}
         rota={btn.rota}
         formValues={btn.formValues}
       />
-    </View>
+    </KeyboardAwareScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+  },
+  contentContainer: {
     padding: 10,
     justifyContent: 'center',
-    width: '100%',
   },
   inputContainer: {
     marginBottom: 15,

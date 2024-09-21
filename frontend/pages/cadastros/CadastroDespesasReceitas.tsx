@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Alert, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Layout from '../../components/layout';
 import Formulario from '../../components/formulario';
-import axios from 'axios';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 export default function CadastroDespesasReceitas() {
   const [selected, setSelected] = useState<'despesa' | 'receita'>('despesa');
@@ -23,14 +23,19 @@ export default function CadastroDespesasReceitas() {
   };
 
   const resetForm = () => {
-    setFormValues(initialValues); // Reseta os valores para os iniciais
+    setFormValues(initialValues);
   };
 
   const botaoNome = selected === 'despesa' ? 'Despesa' : 'Receita';
 
   return (
     <Layout>
-      <View style={styles.container}>
+      <KeyboardAwareScrollView
+        style={styles.container}
+        resetScrollToCoords={{ x: 0, y: 0 }}
+        contentContainerStyle={styles.contentContainer}
+        scrollEnabled={true}
+      >
         <View style={styles.toggleContainer}>
           <TouchableOpacity
             style={[
@@ -55,26 +60,16 @@ export default function CadastroDespesasReceitas() {
           </TouchableOpacity>
         </View>
 
-        {selected === 'despesa' ? (
-          <SafeAreaView style={styles.form}>
-            <Formulario
-              values={formValues}
-              onInputChange={handleInputChange}
-              onReset={resetForm} // Passando a função de reset
-              btn={{ nome: 'Salvar', tipoSucesso: botaoNome, rota: 'cadastro/despesas', formValues }}
-            />
-          </SafeAreaView>
-        ) : (
-          <SafeAreaView style={styles.form}>
-            <Formulario
-              values={formValues}
-              onInputChange={handleInputChange}
-              onReset={resetForm} // Passando a função de reset
-              btn={{ nome: 'Salvar', tipoSucesso: botaoNome, rota: 'cadastro/receitas', formValues }}
-            />
-          </SafeAreaView>
-        )}
-      </View>
+        <SafeAreaView style={styles.form}>
+          <Formulario
+            values={formValues}
+            fields={['Nome', 'Valor', 'Categoria', 'Data', 'Descricao']}
+            onInputChange={handleInputChange}
+            onReset={resetForm}
+            btn={{ nome: 'Salvar', tipoSucesso: botaoNome, rota: `cadastro/${selected}`, formValues }}
+          />
+        </SafeAreaView>
+      </KeyboardAwareScrollView>
     </Layout>
   );
 }
@@ -83,6 +78,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     marginTop: 50,
+  },
+  contentContainer: {
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -92,6 +89,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     borderWidth: 1,
     borderColor: '#ccc',
+    marginBottom: 20,
   },
   button: {
     paddingVertical: 10,
@@ -120,6 +118,5 @@ const styles = StyleSheet.create({
   form: {
     flex: 1,
     width: '75%',
-    marginTop: 20,
   },
 });
