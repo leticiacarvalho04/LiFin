@@ -60,15 +60,27 @@ export default function CadastroDespesasReceitas() {
           </TouchableOpacity>
         </View>
 
-        <SafeAreaView style={styles.form}>
-          <Formulario
-            values={formValues}
-            fields={['Nome', 'Valor', 'Categoria', 'Data', 'Descricao']}
-            onInputChange={handleInputChange}
-            onReset={resetForm}
-            btn={{ nome: 'Salvar', tipoSucesso: botaoNome, rota: `cadastro/${selected}`, formValues }}
+        {selected === 'despesa' ? (
+          <SafeAreaView style={styles.form}>
+            <Formulario
+              values={formValues}
+              fields={['Nome', 'Valor', 'Categoria', 'Data', 'Descricao']} 
+              onInputChange={handleInputChange}
+              onReset={resetForm} // Passando a função de reset
+              btn={{ nome: 'Salvar', tipoSucesso: botaoNome, rota: 'cadastro/despesas', formValues }}
+            />
+          </SafeAreaView>
+        ) : (
+          <SafeAreaView style={styles.form}>
+            <Formulario
+                values={formValues}
+                fields={['Nome', 'Valor', 'Categoria', 'Data', 'Descricao']} 
+                onInputChange={handleInputChange}
+                onReset={resetForm} // Passando a função de reset
+                btn={{ nome: 'Salvar', tipoSucesso: botaoNome, rota: 'cadastro/receitas', formValues }}  
           />
-        </SafeAreaView>
+          </SafeAreaView>
+        )}
       </KeyboardAwareScrollView>
     </Layout>
   );
