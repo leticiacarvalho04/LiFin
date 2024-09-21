@@ -1,22 +1,47 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { TouchableOpacity, View, Text, StyleSheet } from 'react-native';
 import ModalSucesso from './modalSucesso';
+import axios from 'axios';
 
-interface Props{
-    nome: string;
-    tipoSucesso: string;
+interface Props {
+  nome: string;
+  tipoSucesso: string;
+  onReset?: () => void; // Função para resetar o formulário
+  rota: string; // Rota para enviar os dados
+  formValues: any; // Valores do formulário
 }
 
 export default function BtnSalvar(props: Props) {
   const [modalVisible, setModalVisible] = useState(false);
 
-  const handleSubmit = () => {
-    setModalVisible(true); // Exibe o modal ao clicar em salvar
+  const handleSubmit = async () => {
+    setModalVisible(true);
+    const dataToSend = {
+      nome: props.formValues.Nome,
+      categoriaId: props.formValues.Categoria,
+      valor: props.formValues.Valor,
+      data: props.formValues.Data,
+      descricao: props.formValues.Descricao,
+      created_at: new Date().toLocaleDateString('pt-BR'),
+      updated_at: new Date().toLocaleDateString('pt-BR'),
+    };
+  
+    try {
+      const response = await axios.post(`http://192.168.0.5:3000/${props.rota}`, dataToSend);
+      if (response.status === 200) {
+        props.onReset && props.onReset(); // Limpa o formulário após sucesso
+      }
+    } catch (error) {
+      console.error('Erro ao enviar dados:', error);
+    }
   };
 
   const closeModal = () => {
-    setModalVisible(false); // Fecha o modal ao clicar no botão OK
-  };
+    setModalVisible(false);
+    if (props.onReset) {
+      props.onReset(); // Chama a função para resetar os valores do formulário
+    }
+  };  
 
   return (
     <View>
@@ -26,14 +51,13 @@ export default function BtnSalvar(props: Props) {
         </View>
       </TouchableOpacity>
 
-      {/* Exibe o ModalSucesso dentro de um <View> */}
       {modalVisible && (
         <ModalSucesso
-          nome={props.nome}
-          tipoSucesso={props.tipoSucesso}
-          onClose={closeModal}
-          visible={modalVisible}
-        />
+        nome={props.nome}
+        tipoSucesso={props.tipoSucesso}
+        onClose={closeModal}
+        visible={modalVisible}
+      />      
       )}
     </View>
   );

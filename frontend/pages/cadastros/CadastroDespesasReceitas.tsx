@@ -2,29 +2,28 @@ import React, { useState } from 'react';
 import { Alert, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Layout from '../../components/layout';
 import Formulario from '../../components/formulario';
+import axios from 'axios';
 
 export default function CadastroDespesasReceitas() {
   const [selected, setSelected] = useState<'despesa' | 'receita'>('despesa');
-  const [formValues, setFormValues] = useState({
+  const initialValues = {
     Nome: '',
-    Valor: '',
-    Data: '', // Inicializa com uma string vazia
-    Descrição: '',
-  });
-
-  const handleSubmit = () => {
-    if (formValues.Nome && formValues.Valor && formValues.Data && formValues.Descrição) {
-      Alert.alert('Formulário enviado!', JSON.stringify(formValues));
-    } else {
-      Alert.alert('Erro', 'Preencha todos os campos!');
-    }
+    Valor: 0,
+    Categoria: '',
+    Data: '',
+    Descricao: ''
   };
+  const [formValues, setFormValues] = useState(initialValues);
 
   const handleInputChange = (field: string, value: any) => {
-    setFormValues(prevValues => ({
+    setFormValues((prevValues) => ({
       ...prevValues,
       [field]: value,
     }));
+  };
+
+  const resetForm = () => {
+    setFormValues(initialValues); // Reseta os valores para os iniciais
   };
 
   const botaoNome = selected === 'despesa' ? 'Despesa' : 'Receita';
@@ -33,7 +32,6 @@ export default function CadastroDespesasReceitas() {
     <Layout>
       <View style={styles.container}>
         <View style={styles.toggleContainer}>
-          {/* Botão de Despesa */}
           <TouchableOpacity
             style={[
               styles.button,
@@ -45,7 +43,6 @@ export default function CadastroDespesasReceitas() {
             <Text style={styles.text}>Despesa</Text>
           </TouchableOpacity>
 
-          {/* Botão de Receita */}
           <TouchableOpacity
             style={[
               styles.button,
@@ -58,15 +55,25 @@ export default function CadastroDespesasReceitas() {
           </TouchableOpacity>
         </View>
 
-        {/* Formulário */}
-        <SafeAreaView style={styles.form}>
-          <Formulario
-            values={formValues}
-            onInputChange={handleInputChange}
-            onSubmit={handleSubmit}
-            btn={{ nome: botaoNome, tipoSucesso: 'cadastrada' }}
-          />
-        </SafeAreaView>
+        {selected === 'despesa' ? (
+          <SafeAreaView style={styles.form}>
+            <Formulario
+              values={formValues}
+              onInputChange={handleInputChange}
+              onReset={resetForm} // Passando a função de reset
+              btn={{ nome: 'Salvar', tipoSucesso: botaoNome, rota: 'cadastro/despesas', formValues }}
+            />
+          </SafeAreaView>
+        ) : (
+          <SafeAreaView style={styles.form}>
+            <Formulario
+              values={formValues}
+              onInputChange={handleInputChange}
+              onReset={resetForm} // Passando a função de reset
+              btn={{ nome: 'Salvar', tipoSucesso: botaoNome, rota: 'cadastro/receitas', formValues }}
+            />
+          </SafeAreaView>
+        )}
       </View>
     </Layout>
   );

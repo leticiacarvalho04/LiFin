@@ -1,4 +1,5 @@
-import React from 'react';
+import axios from 'axios';
+import React, { useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 
@@ -7,9 +8,17 @@ interface SucessModalProps {
   nome: string;
   tipoSucesso: string;
   visible: boolean; 
+  onSubmit?: () => void;
+  onReset?: () => void;
 }
 
-const ModalSucesso: React.FC<SucessModalProps> = ({ onClose, nome, tipoSucesso, visible }) => {
+const ModalSucesso: React.FC<SucessModalProps> = ({ onClose, nome, tipoSucesso, visible, onSubmit }) => {
+  const handleOk = () => {
+    if (onClose) {
+      onClose();  // Fecha o modal
+    }
+  };
+
   return (
     <Modal
       transparent={true}
@@ -36,7 +45,7 @@ const ModalSucesso: React.FC<SucessModalProps> = ({ onClose, nome, tipoSucesso, 
 
           {onClose && (
             <View style={styles.buttonContainer}>
-              <TouchableOpacity onPress={onClose} style={styles.okButton}>
+              <TouchableOpacity onPress={handleOk} style={styles.okButton}>
                 <Text style={styles.okButtonText}>OK</Text>
               </TouchableOpacity>
             </View>

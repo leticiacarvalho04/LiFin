@@ -1,24 +1,47 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { TouchableOpacity, View, Text, StyleSheet, ActivityIndicator, TextInput } from 'react-native';
+import { Picker } from '@react-native-picker/picker'; // Importando o Picker para seleção de categorias
 import DateTimePicker from '@react-native-community/datetimepicker';
 import BtnSalvar from './btnSalvar';
+import ModalSucesso from './modalSucesso'; // Certifique-se que o modalSucesso está correto
+import axios from 'axios';
+import { Categoria } from '../types/categoria';
 
-interface Props {
-  values: { [key: string]: any }; // Valores dos inputs do formulário
-  onInputChange?: (field: string, value: any) => void; // Função para atualizar o estado dos inputs
-  onSubmit?: () => void; // Função de envio do formulário
-  btn: { nome: string; tipoSucesso: string };
+interface PropsFormulario {
+  values: { [key: string]: any };
+  onInputChange?: (field: string, value: any) => void;
+  onSubmit?: () => void;
+  onReset?: () => void;
+  btn: { nome: string; tipoSucesso: string, rota: string, formValues: any}; // Adiciona rota e formValues
 }
 
-export default function Formulario(props: Props) {
+export default function Formulario(props: PropsFormulario) {
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const { values, onInputChange, onSubmit, btn } = props;
+  const [categorias, setCategorias] = useState<Categoria[]>([]);
+  const [loadingCategorias, setLoadingCategorias] = useState(false);
+
+  const { values, onInputChange, onSubmit, onReset, btn } = props;
+
+  useEffect(() => {
+    const fetchCategorias = async () => {
+      setLoadingCategorias(true);
+      try {
+        const response = await axios.get('http://192.168.0.5:3000/listar/categoria');
+        setCategorias(response.data);
+      } catch (error) {
+        console.error('Erro ao buscar categorias:', error);
+      } finally {
+        setLoadingCategorias(false);
+      }
+    };
+
+    fetchCategorias();
+  }, []);
 
   const formatDate = (date: Date): string => {
     const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0'); // Meses começam do zero
+    const month = String(date.getMonth() + 1).padStart(2, '0');
     const year = date.getFullYear();
-    
     return `${day}/${month}/${year}`;
   };
 
@@ -27,7 +50,6 @@ export default function Formulario(props: Props) {
       const formattedDate = formatDate(selectedDate);
       onInputChange && onInputChange('Data', formattedDate);
     }
-    // Sempre oculta o picker após a seleção
     setShowDatePicker(false);
   };
 
@@ -38,19 +60,13 @@ export default function Formulario(props: Props) {
 
   return (
     <View style={styles.container}>
-      {/* Renderizar inputs dinamicamente com base nos valores */}
       {Object.keys(values).map((key) => (
         <View key={key} style={styles.inputContainer}>
           <Text style={styles.label}>{key}</Text>
           {key === 'Data' ? (
             <>
-              <TouchableOpacity
-                onPress={() => setShowDatePicker(true)}
-                style={styles.input}
-              >
-                <Text style={styles.dateText}>
-                  {values[key] || 'Selecione a data'}
-                </Text>
+              <TouchableOpacity onPress={() => setShowDatePicker(true)} style={styles.input}>
+                <Text style={styles.dateText}>{values[key] || 'Selecione a data'}</Text>
               </TouchableOpacity>
               {showDatePicker && (
                 <DateTimePicker
@@ -59,6 +75,22 @@ export default function Formulario(props: Props) {
                   onChange={handleDateChange}
                   display="default"
                 />
+              )}
+            </>
+          ) : key === 'Categoria' ? (
+            <>
+              {loadingCategorias ? (
+                <ActivityIndicator size="small" color="#0000ff" />
+              ) : (
+                <Picker
+                  selectedValue={values['Categoria']}
+                  onValueChange={(itemValue) => onInputChange && onInputChange('Categoria', itemValue)}
+                >
+                  <Picker.Item label="Selecione uma categoria" value="" />
+                  {categorias.map((categoria) => (
+                    <Picker.Item key={categoria.id} label={categoria.nome} value={categoria.id} />
+                  ))}
+                </Picker>
               )}
             </>
           ) : (
@@ -72,8 +104,13 @@ export default function Formulario(props: Props) {
         </View>
       ))}
 
-      {/* Botão de Enviar */}
-      <BtnSalvar nome={btn.nome} tipoSucesso={btn.tipoSucesso} />
+      <BtnSalvar 
+        nome={btn.nome} 
+        tipoSucesso={btn.tipoSucesso} 
+        onReset={onReset} 
+        rota={btn.rota}
+        formValues={btn.formValues}
+      />
     </View>
   );
 }
@@ -91,7 +128,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     marginBottom: 5,
-    width: '100%',
   },
   input: {
     borderWidth: 1,
@@ -99,7 +135,6 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 5,
     width: '100%',
-    justifyContent: 'center',
   },
   dateText: {
     fontSize: 16,

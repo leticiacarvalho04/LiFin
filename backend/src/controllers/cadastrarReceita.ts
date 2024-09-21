@@ -1,13 +1,14 @@
 import { Request, Response } from "express";
 import { db } from "../config";
 import Despesas from "../interface/despesas";
+import Receitas from "../interface/receitas";
 
-const colecaoDespesas = db.collection("despesas");
+const colecaoReceitas = db.collection("receitas");
 const colecaoCategorias = db.collection("categorias");
 
-export const cadastrarDespesa = async (req: Request, res: Response) => {
+export const cadastrarReceita = async (req: Request, res: Response) => {
   try {
-    const dados: Despesas = req.body; // Dados da despesa recebidos no corpo da requisição
+    const dados: Receitas = req.body; // Dados da despesa recebidos no corpo da requisição
 
     // Verificar se a categoria existe com base no ID da categoria
     const categoriaDoc = await colecaoCategorias.doc(dados.categoriaId).get();
@@ -22,21 +23,21 @@ export const cadastrarDespesa = async (req: Request, res: Response) => {
     };
 
     // Converter a data recebida para objeto Date
-    const dataDespesa = parseDate(dados.data);
+    const datareceita = parseDate(dados.data);
 
-    // Adicionar a despesa à coleção 'despesas'
-    const novaDespesa = await colecaoDespesas.add({
+    // Adicionar a receita à coleção 'receitas'
+    const novaReceita = await colecaoReceitas.add({
       nome: dados.nome,
       categoriaId: dados.categoriaId, // Associar pelo ID da categoria
       valor: dados.valor,
-      data: dataDespesa, // Armazenar a data como objeto Date
+      data: datareceita, // Armazenar a data como objeto Date
       descricao: dados.descricao,
       created_at: new Date(), // Definir data de criação atual
       updated_at: new Date(), // Definir data de atualização atual
     });
 
-    res.status(201).json({ id: novaDespesa.id, ...dados }); // Retorna o ID da nova despesa e os dados cadastrados
+    res.status(201).json({ id: novaReceita.id, ...dados }); // Retorna o ID da nova receita e os dados cadastrados
   } catch (erro) {
-    res.status(500).json({ erro: "Falha ao cadastrar despesa" }); // Trata erros
+    res.status(500).json({ erro: "Falha ao cadastrar receita" }); // Trata erros
   }
 };
