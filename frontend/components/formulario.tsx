@@ -27,7 +27,7 @@ export default function Formulario(props: PropsFormulario) {
     const fetchCategorias = async () => {
       setLoadingCategorias(true);
       try {
-        const response = await axios.get('http://192.168.17.226:3000/listar/categoria');
+        const response = await axios.get('http://192.168.17.226:3000/categorias');
         setCategorias(response.data);
       } catch (error) {
         console.error('Erro ao buscar categorias:', error);

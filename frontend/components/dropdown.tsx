@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { Text, View, TouchableOpacity } from 'react-native';
-import tw from 'twrnc';
+import { Text, View, TouchableOpacity, StyleSheet } from 'react-native';
 
 interface TableProps<T> {
   data: T[];
@@ -20,11 +19,11 @@ const TabelaGenerica = <T,>({ data, columns, dropdownContent }: TableProps<T>): 
   };
 
   return (
-    <View style={tw`flex justify-center border border-black rounded-xl bg-white w-[90%] p-4`}>
+    <View style={styles.container}>
       <View>
-        <View style={tw`flex-row justify-between`}>
+        <View style={styles.header}>
           {columns.map((column) => (
-            <Text key={String(column.key)} style={tw`text-center px-2 py-4 border-b border-r border-black`}>
+            <Text key={String(column.key)} style={styles.headerCell}>
               {column.label}
             </Text>
           ))}
@@ -33,31 +32,31 @@ const TabelaGenerica = <T,>({ data, columns, dropdownContent }: TableProps<T>): 
           <React.Fragment key={index}>
             <TouchableOpacity
               onPress={() => handleRowClick(index)}
-              style={tw`flex-row justify-between px-2 py-4 border-b border-r border-black`}
+              style={styles.row}
             >
               {columns.map((column) => (
-                <Text key={String(column.key)} style={tw`text-center`}>
+                <Text key={String(column.key)} style={styles.cell}>
                   {String(item[column.key])}
                 </Text>
               ))}
             </TouchableOpacity>
             {selectedItemId === index && (
-              <View style={tw`bg-purple-600 border-t border-b border-black rounded-b-xl p-4`}>
-                <View style={tw`mb-2`}>
-                  <Text style={tw`font-bold text-left`}>{dropdownContent(item).idRow}</Text>
+              <View style={styles.dropdown}>
+                <View style={styles.dropdownHeader}>
+                  <Text style={styles.dropdownText}>{dropdownContent(item).idRow}</Text>
                 </View>
-                <View style={tw`flex-row justify-between`}>
-                  <View style={tw`flex-1 mx-2`}>
-                    <Text style={tw`text-left`}>{dropdownContent(item).col1}</Text>
+                <View style={styles.dropdownContent}>
+                  <View style={styles.dropdownCol}>
+                    <Text style={styles.dropdownText}>{dropdownContent(item).col1}</Text>
                   </View>
-                  <View style={tw`flex-1 mx-2`}>
-                    <Text style={tw`text-left`}>{dropdownContent(item).col2}</Text>
+                  <View style={styles.dropdownCol}>
+                    <Text style={styles.dropdownText}>{dropdownContent(item).col2}</Text>
                   </View>
                 </View>
                 {dropdownContent(item).extra && (
-                  <View style={tw`mt-4`}>
+                  <View style={styles.extraContent}>
                     {dropdownContent(item).extra?.map((element, idx) => (
-                      <View key={idx} style={tw`mb-2`}>
+                      <View key={idx} style={styles.extraElement}>
                         {element}
                       </View>
                     ))}
@@ -71,5 +70,71 @@ const TabelaGenerica = <T,>({ data, columns, dropdownContent }: TableProps<T>): 
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    borderColor: 'black',
+    borderWidth: 1,
+    borderRadius: 15,
+    backgroundColor: 'white',
+    width: '90%',
+    padding: 16,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  headerCell: {
+    textAlign: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 8,
+    borderBottomWidth: 1,
+    borderColor: 'black',
+    borderRightWidth: 1,
+  },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 16,
+    paddingHorizontal: 8,
+    borderBottomWidth: 1,
+    borderColor: 'black',
+    borderRightWidth: 1,
+  },
+  cell: {
+    textAlign: 'center',
+  },
+  dropdown: {
+    backgroundColor: '#6A5ACD', // Cor para o fundo do dropdown
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: 'black',
+    borderRadius: 10,
+    padding: 16,
+  },
+  dropdownHeader: {
+    marginBottom: 8,
+  },
+  dropdownText: {
+    fontWeight: 'bold',
+    textAlign: 'left',
+  },
+  dropdownContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  dropdownCol: {
+    flex: 1,
+    marginHorizontal: 8,
+  },
+  extraContent: {
+    marginTop: 16,
+  },
+  extraElement: {
+    marginBottom: 8,
+  },
+});
 
 export default TabelaGenerica;

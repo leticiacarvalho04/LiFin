@@ -9,10 +9,10 @@ import { listarReceita } from "../controllers/listarReceita";
 const router = Router();
 
 router.post("/cadastro/despesas", cadastrarDespesa) // Rota para cadastrar despesa
-router.get("/listar/despesas", listarDespesa)
+router.get("/despesas", listarDespesa)
 router.post("/cadastro/receitas", cadastrarReceita) // Rota para cadastrar despesa
-router.get("/listar/receitas", listarReceita)
+router.get("/receitas", listarReceita)
 router.post("/cadastro/categoria", cadastrarCategoria) 
-router.get("/listar/categoria", listarCategorias)
+router.get("/categorias", listarCategorias)
 
 export default router;
