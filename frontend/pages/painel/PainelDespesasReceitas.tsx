@@ -1,8 +1,7 @@
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Layout from "../../components/layout";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
-import Dropdown from "../../components/dropdown";
 import ListagemDespesas from "./ListagemDespesas";
 import ListagemReceitas from "./listagemReceita";
 
@@ -16,8 +15,6 @@ export default function PainelDespesasReceitas() {
     descricao: ''
   };
   const [painelValues, setPainelValues] = useState(initialValues);
-
-  
 
   const botaoNome = selected === 'despesa' ? 'Despesa' : 'Receita';
 
@@ -54,11 +51,11 @@ export default function PainelDespesasReceitas() {
         </View>
 
         {selected === 'despesa' ? (
-          <View>
+          <View style={styles.listagem}>
             <ListagemDespesas />
           </View>
         ) : (
-          <View>
+          <View style={styles.listagem}>
             <Text>Formulário de Receita</Text>
             <ListagemReceitas />
           </View>
@@ -72,10 +69,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     marginTop: 50,
+    width: '100%',
   },
   contentContainer: {
     justifyContent: 'center',
     alignItems: 'center',
+    width: '100%',
   },
   toggleContainer: {
     flexDirection: 'row',
@@ -109,17 +108,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#000',
   },
-  form: {
-    flex: 1,
-    width: '75%',
-    marginVertical: '5%',
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#D9D9D9',
-  },
-  edicao: {
-    padding: 10,
-  },
   botoes: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -127,5 +115,7 @@ const styles = StyleSheet.create({
   },
   listagem: {
     padding: 10,
+    width: '100%',
+    justifyContent: 'center',
   },
 });

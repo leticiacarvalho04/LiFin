@@ -66,6 +66,7 @@ export default function ListagemDespesas() {
 const styles = StyleSheet.create({
     container: {
         padding: 10,
+        alignContent:'center',
     },
     card: {
         backgroundColor: "#fff",
