@@ -27,7 +27,7 @@ export default function BtnSalvar(props: Props) {
     };
   
     try {
-      const response = await axios.post(`http://192.168.0.5:3000/${props.rota}`, dataToSend);
+      const response = await axios.post(`http://192.168.17.226:3000/${props.rota}`, dataToSend);
       if (response.status === 200) {
         props.onReset && props.onReset(); // Limpa o formulário após sucesso
       }

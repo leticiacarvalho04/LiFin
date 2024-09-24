@@ -21,7 +21,7 @@ export function Navbar() {
         { key: 'Home', label: 'Início', emoji: '🏠' },
         { key: 'CadastroDespesasReceitas', label: 'Anotar despesas e receitas', emoji: '📝' },
         { key: 'PainelDespesasReceitas', label: 'Painel de despesas e receitas', emoji: '🗃' },
-        { key: 'Categorias', label: 'Criar categorias', emoji: '🏷️' },
+        { key: 'Categorias', label: 'Painel de categorias', emoji: '🏷️' },
         { key: 'Orcamentos', label: 'Meus orçamentos', emoji: '💸' },
         { key: 'Metas', label: 'Minhas metas financeiras', emoji: '🎯' },
         { key: 'Relatorios', label: 'Meus relatórios', emoji: '📊' }
