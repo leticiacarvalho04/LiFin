@@ -53,11 +53,11 @@ export default function BtnSalvar(props: Props) {
 
       {modalVisible && (
         <ModalSucesso
-        nome={props.nome}
-        tipoSucesso={props.tipoSucesso}
-        onClose={closeModal}
-        visible={modalVisible}
-      />      
+          nome={props.nome}
+          tipoSucesso={props.tipoSucesso}
+          onClose={closeModal}
+          visible={modalVisible}
+        />      
       )}
     </View>
   );
@@ -70,6 +70,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     width: '100%',
     alignItems: 'center',
+    marginVertical: '8%', // Corrigido
   },
   btnContent: {
     flexDirection: 'row',

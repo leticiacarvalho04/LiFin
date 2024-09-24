@@ -144,6 +144,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   inputContainer: {
+    margin:'5%',
     marginBottom: 15,
   },
   label: {

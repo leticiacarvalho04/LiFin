@@ -130,5 +130,9 @@ const styles = StyleSheet.create({
   form: {
     flex: 1,
     width: '75%',
+    marginVertical: '5%',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#D9D9D9',
   },
 });
