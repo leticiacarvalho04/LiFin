@@ -27,7 +27,7 @@ export default function BtnSalvar(props: Props) {
     };
   
     try {
-      const response = await axios.post(`http://192.168.0.5:3000/${props.rota}`, dataToSend);
+      const response = await axios.post(`http://192.168.17.226:3000/${props.rota}`, dataToSend);
       if (response.status === 200) {
         props.onReset && props.onReset(); // Limpa o formulário após sucesso
       }
@@ -53,11 +53,11 @@ export default function BtnSalvar(props: Props) {
 
       {modalVisible && (
         <ModalSucesso
-        nome={props.nome}
-        tipoSucesso={props.tipoSucesso}
-        onClose={closeModal}
-        visible={modalVisible}
-      />      
+          nome={props.nome}
+          tipoSucesso={props.tipoSucesso}
+          onClose={closeModal}
+          visible={modalVisible}
+        />      
       )}
     </View>
   );
@@ -70,6 +70,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     width: '100%',
     alignItems: 'center',
+    marginVertical: '8%', // Corrigido
   },
   btnContent: {
     flexDirection: 'row',

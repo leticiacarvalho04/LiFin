@@ -7,6 +7,7 @@ import PainelDespesasReceitas from '../pages/painel/PainelDespesasReceitas';
 import PainelMetas from '../pages/painel/painelMetas';
 import PainelOrcamentos from '../pages/painel/painelOrcamentos';
 import PainelRelatorios from '../pages/painel/painelRelatorios';
+import CadastroCategoria from '../pages/cadastros/cadastroCategorias';
 
 export type RootStackParamList = {
   Home: undefined;
@@ -16,6 +17,7 @@ export type RootStackParamList = {
   Metas: undefined;
   Relatorios: undefined;
   Orcamentos: undefined;
+  CadastrarCategoria: undefined;
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -27,6 +29,7 @@ export default function Routes() {
       <Stack.Screen name="CadastroDespesasReceitas" component={CadastroDespesasReceitas} />
       <Stack.Screen name="PainelDespesasReceitas" component={PainelDespesasReceitas} />
       <Stack.Screen name="Categorias" component={PainelCategorias} />
+      <Stack.Screen name="CadastrarCategoria" component={CadastroCategoria} />
       <Stack.Screen name="Metas" component={PainelMetas} />
       <Stack.Screen name="Relatorios" component={PainelRelatorios} />
       <Stack.Screen name="Orcamentos" component={PainelOrcamentos} />

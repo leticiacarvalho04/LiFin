@@ -67,7 +67,7 @@ export default function CadastroDespesasReceitas() {
               fields={['Nome', 'Valor', 'Categoria', 'Data', 'Descricao']} 
               onInputChange={handleInputChange}
               onReset={resetForm} // Passando a função de reset
-              btn={{ nome: 'Salvar', tipoSucesso: botaoNome, rota: 'cadastro/despesas', formValues }}
+              btn={{ nome: 'Despesa', tipoSucesso: 'cadastrada', rota: 'cadastro/despesas', formValues }}
             />
           </SafeAreaView>
         ) : (
@@ -77,7 +77,7 @@ export default function CadastroDespesasReceitas() {
                 fields={['Nome', 'Valor', 'Categoria', 'Data', 'Descricao']} 
                 onInputChange={handleInputChange}
                 onReset={resetForm} // Passando a função de reset
-                btn={{ nome: 'Salvar', tipoSucesso: botaoNome, rota: 'cadastro/receitas', formValues }}  
+                btn={{ nome: 'Receita', tipoSucesso: 'cadastrada', rota: 'cadastro/receitas', formValues }}  
           />
           </SafeAreaView>
         )}
@@ -130,5 +130,9 @@ const styles = StyleSheet.create({
   form: {
     flex: 1,
     width: '75%',
+    marginVertical: '5%',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#D9D9D9',
   },
 });
