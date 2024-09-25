@@ -6,6 +6,7 @@ import BtnSalvar from './btnSalvar';
 import axios from 'axios';
 import { Categoria } from '../types/categoria';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { API_URL } from '../api';
 
 interface PropsFormulario {
   fields: string[]; // Nomes dos campos
@@ -27,7 +28,7 @@ export default function Formulario(props: PropsFormulario) {
     const fetchCategorias = async () => {
       setLoadingCategorias(true);
       try {
-        const response = await axios.get('http://192.168.17.226:3000/categorias');
+        const response = await axios.get(`${API_URL}/categorias`);
         setCategorias(response.data);
       } catch (error) {
         console.error('Erro ao buscar categorias:', error);

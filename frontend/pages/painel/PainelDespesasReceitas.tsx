@@ -56,7 +56,6 @@ export default function PainelDespesasReceitas() {
           </View>
         ) : (
           <View style={styles.listagem}>
-            <Text>Formulário de Receita</Text>
             <ListagemReceitas />
           </View>
         )}

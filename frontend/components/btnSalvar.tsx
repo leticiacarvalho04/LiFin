@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { TouchableOpacity, View, Text, StyleSheet } from 'react-native';
 import ModalSucesso from './modalSucesso';
 import axios from 'axios';
+import { API_URL } from '../api';
 
 interface Props {
   nome: string;
@@ -27,7 +28,7 @@ export default function BtnSalvar(props: Props) {
     };
   
     try {
-      const response = await axios.post(`http://192.168.17.226:3000/${props.rota}`, dataToSend);
+      const response = await axios.post(`${API_URL}/${props.rota}`, dataToSend);
       if (response.status === 200) {
         props.onReset && props.onReset(); // Limpa o formulário após sucesso
       }
