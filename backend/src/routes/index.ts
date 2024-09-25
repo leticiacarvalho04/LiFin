@@ -5,11 +5,14 @@ import ReceitaController from "../controllers/controllerReceita";
 
 const router = Router();
 
-router.post("/cadastro/despesa", DespesaController.cadastrarDespesa) // Rota para cadastrar despesa
-router.get("/despesas", DespesaController.listarDespesa)
-router.post("/cadastro/receita", ReceitaController.cadastrarReceita) // Rota para cadastrar despesa
-router.get("/receitas", ReceitaController.listarReceita)
+router.post("/cadastro/despesa", DespesaController.cadastrarDespesa)
+router.post("/cadastro/receita", ReceitaController.cadastrarReceita) 
 router.post("/cadastro/categoria", CategoriaController.cadastrarCategoria) 
+
+router.get("/despesas", DespesaController.listarDespesa)
+router.get("/receitas", ReceitaController.listarReceita)
 router.get("/categorias", CategoriaController.listarCategoria)
+
+router.put("/atualizar/categoria/:id", CategoriaController.editarCategoria)
 
 export default router;
