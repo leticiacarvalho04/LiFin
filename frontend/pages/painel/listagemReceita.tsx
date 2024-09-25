@@ -12,7 +12,7 @@ export default function ListagemReceitas() {
     useEffect(() => {
         const fetchDespesas = async () => {
             try {
-                const response = await axios.get('http://192.168.17.226:3000/receitas');
+                const response = await axios.get('http://192.168.0.14:3000/receitas');
                 const despesasData = response.data.map((despesa: Despesas): Despesas => {
                     return {
                         nome: despesa.nome,
@@ -67,6 +67,7 @@ export default function ListagemReceitas() {
 const styles = StyleSheet.create({
     container: {
         padding: 10,
+        alignItems: 'center',
     },
     card: {
         backgroundColor: "#fff",
@@ -81,7 +82,7 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: 3.84,
         elevation: 5,
-        width: '100%', // Garante que a largura seja consistente
+        width: '90%', // Garante que a largura seja consistente
         maxWidth: 350,  // Limita a largura máxima da View
     },
     row: {
@@ -92,10 +93,12 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 18,
         fontWeight: "bold",
+        textAlign: 'center', 
     },
     date: {
         fontSize: 14,
         color: "#555",
+        textAlign: 'center', 
     },
     valueDespesa: {
         fontSize: 16,
