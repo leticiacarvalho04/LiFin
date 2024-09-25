@@ -43,6 +43,11 @@ export default function ListagemReceitas() {
         fetchReceitas();
     }, []);
 
+    const getCategoriaNome = (categoriaId: string) => {
+        const categoria = categorias.find((cat) => cat.id === categoriaId);
+        return categoria ? categoria.nome : "Categoria desconhecida";
+    };
+
     return (
         <View style={styles.container}>
             {painelValues.map((receita: Receitas, index: number) => (
@@ -53,6 +58,7 @@ export default function ListagemReceitas() {
                     value={receita.valor} 
                     valueColor="#2e7d32"  
                 >
+                    <Text>Categoria: {getCategoriaNome(receita.categoriaId)}</Text>
                     <Text>Descrição: {receita.descricao}</Text>
                     <Text>Criado em: {receita.created_at}</Text>
                     <Text>Atualizado em: {receita.updated_at}</Text>

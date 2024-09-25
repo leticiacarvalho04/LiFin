@@ -65,6 +65,7 @@ export default function ListagemDespesas() {
                     value={despesa.valor.toString()} // Certifique-se que o valor é uma string
                     valueColor="#d32f2f" 
                 >
+                    <Text>Categoria: {getCategoriaNome(despesa.categoriaId)}</Text>
                     <Text>Descrição: {despesa.descricao}</Text>
                     <Text>Criado em: {despesa.created_at}</Text>
                     <Text>Atualizado em: {despesa.updated_at}</Text>
