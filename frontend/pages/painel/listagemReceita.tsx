@@ -3,16 +3,28 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import Despesas from "../../types/despesas";
 import { Receitas } from "../../types/receitas";
+import { Categoria } from "../../types/categoria";
 
 export default function ListagemReceitas() {
     const initialValues: Receitas[] = [];
     const [painelValues, setPainelValues] = useState<Receitas[]>(initialValues);
+    const [categorias, setCategorias] = useState<Categoria[]>([]); // Armazena as categorias
     const [expandedIndex, setExpandedIndex] = useState<number | null>(null); // Para controlar qual despesa está expandida
+
+    // Função para buscar as categorias
+    const fetchCategorias = async () => {
+        try {
+            const response = await axios.get('http://192.168.17.226:3000/categorias'); // Endpoint das categorias
+            setCategorias(response.data);
+        } catch (error) {
+            console.error("Erro ao buscar categorias:", error);
+        }
+    };
 
     useEffect(() => {
         const fetchDespesas = async () => {
             try {
-                const response = await axios.get('http://192.168.0.14:3000/receitas');
+                const response = await axios.get('http://192.168.17.226:3000/receitas');
                 const despesasData = response.data.map((despesa: Despesas): Despesas => {
                     return {
                         nome: despesa.nome,
@@ -31,8 +43,15 @@ export default function ListagemReceitas() {
             }
         };
 
+        fetchCategorias();
         fetchDespesas();
     }, []);
+
+    // Função para obter o nome da categoria com base no categoriaId
+    const getCategoriaNome = (categoriaId: string) => {
+        const categoria = categorias.find((cat) => cat.id === categoriaId);
+        return categoria ? categoria.nome : "Categoria desconhecida";
+    };
 
     const toggleDropdown = (index: number) => {
         // Se já estiver expandido, fecha; caso contrário, expande
@@ -52,10 +71,31 @@ export default function ListagemReceitas() {
                     {/* Dropdown para mostrar informações adicionais */}
                     {expandedIndex === index && (
                         <View style={styles.dropdown}>
-                            <Text>Categoria: {despesa.categoriaId}</Text>
-                            <Text>Descrição: {despesa.descricao}</Text>
-                            <Text>Criado em: {despesa.created_at}</Text>
-                            <Text>Atualizado em: {despesa.updated_at}</Text>
+                            <View style={styles.dropdownItem}>
+                                <Text style={styles.dropdownLabel}>Nome:</Text>
+                                <Text style={styles.dropdownText}>{despesa.nome}</Text>
+                            </View>
+                            <View style={styles.dropdownItem}>
+                                <Text style={styles.dropdownLabel}>Categoria:</Text>
+                                {/* Certifique-se de que o nome da categoria esteja dentro de um <Text> */}
+                                <Text style={styles.dropdownText}>{getCategoriaNome(despesa.categoriaId)}</Text> 
+                            </View>
+                            <View style={styles.dropdownItem}>
+                                <Text style={styles.dropdownLabel}>Valor:</Text>
+                                <Text style={styles.dropdownText}>R$ {despesa.valor}</Text>
+                            </View>
+                            <View style={styles.dropdownItem}>
+                                <Text style={styles.dropdownLabel}>Descrição:</Text>
+                                <Text style={styles.dropdownText}>{despesa.descricao}</Text>
+                            </View>
+                            <View style={styles.dropdownItem}>
+                                <Text style={styles.dropdownLabel}>Criado em:</Text>
+                                <Text style={styles.dropdownText}>{despesa.created_at}</Text>
+                            </View>
+                            <View style={styles.dropdownItem}>
+                                <Text style={styles.dropdownLabel}>Atualizado em:</Text>
+                                <Text style={styles.dropdownText}>{despesa.updated_at}</Text>
+                            </View>
                         </View>
                     )}
                 </TouchableOpacity>
@@ -82,35 +122,45 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: 3.84,
         elevation: 5,
-        width: '90%', // Garante que a largura seja consistente
-        maxWidth: 350,  // Limita a largura máxima da View
+        width: '90%',
+        maxWidth: 350,
     },
     row: {
         flexDirection: 'row',
-        justifyContent: 'space-between', // Para que o nome e a data fiquem nas extremidades
-        alignItems: 'center', // Centraliza verticalmente
+        justifyContent: 'space-between',
+        alignItems: 'center',
     },
     title: {
         fontSize: 18,
         fontWeight: "bold",
-        textAlign: 'center', 
+        textAlign: 'center',
     },
     date: {
         fontSize: 14,
         color: "#555",
-        textAlign: 'center', 
+        textAlign: 'center',
     },
     valueDespesa: {
         fontSize: 16,
         fontWeight: "bold",
-        color: "#2e7d32", // Vermelho para indicar despesa
+        color: "#2e7d32",
+        textAlign: 'left',
     },
     dropdown: {
         marginTop: 10,
         padding: 10,
-        borderWidth: 1,
-        borderColor: "#ddd",
-        borderRadius: 5,
-        backgroundColor: "#f9f9f9",
+        width: '100%',
+        borderTopWidth: 1,
+        borderTopColor: '#ccc',
+    },
+    dropdownItem: {
+        marginBottom: 8,
+    },
+    dropdownLabel: {
+        fontWeight: 'bold',
+        marginRight: 5,
+    },
+    dropdownText: {
+        flex: 1,
     },
 });

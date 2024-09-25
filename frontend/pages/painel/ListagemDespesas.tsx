@@ -13,7 +13,7 @@ export default function ListagemDespesas() {
     // Função para buscar as categorias
     const fetchCategorias = async () => {
         try {
-            const response = await axios.get('http://192.168.0.14:3000/categorias'); // Endpoint das categorias
+            const response = await axios.get('http://192.168.17.226:3000/categorias'); // Endpoint das categorias
             setCategorias(response.data);
         } catch (error) {
             console.error("Erro ao buscar categorias:", error);
@@ -23,7 +23,7 @@ export default function ListagemDespesas() {
     useEffect(() => {
         const fetchDespesas = async () => {
             try {
-                const response = await axios.get('http://192.168.0.14:3000/despesas');
+                const response = await axios.get('http://192.168.17.226:3000/despesas');
                 const despesasData = response.data.map((despesa: Despesas): Despesas => {
                     return {
                         nome: despesa.nome,
