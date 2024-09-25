@@ -29,7 +29,7 @@ const styles = StyleSheet.create({
         position: 'absolute',
         top: 0,
         left: 0,
-        width: width * 0.75, // Sidebar cobrindo 70% da largura da tela
+        width: width * 0.65, // Sidebar cobrindo 70% da largura da tela
         height: height, // Sidebar cobrindo 100% da altura da tela
         padding: 20,
         zIndex: 2,

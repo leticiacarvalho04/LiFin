@@ -1,18 +1,15 @@
 import { Router } from "express";
-import { cadastrarDespesa } from "../controllers/cadastrarDespesa";
-import { cadastrarCategoria } from "../controllers/cadastrarCategoria";
-import { listarCategorias } from "../controllers/listarCategoria";
-import { cadastrarReceita } from "../controllers/cadastrarReceita";
-import { listarDespesa } from "../controllers/listarDespesa";
-import { listarReceita } from "../controllers/listarReceita";
+import DespesaController from "../controllers/controllerDespesa";
+import CategoriaController from "../controllers/controllerCategoria";
+import ReceitaController from "../controllers/controllerReceita";
 
 const router = Router();
 
-router.post("/cadastro/despesas", cadastrarDespesa) // Rota para cadastrar despesa
-router.get("/despesas", listarDespesa)
-router.post("/cadastro/receitas", cadastrarReceita) // Rota para cadastrar despesa
-router.get("/receitas", listarReceita)
-router.post("/cadastro/categoria", cadastrarCategoria) 
-router.get("/categorias", listarCategorias)
+router.post("/cadastro/despesa", DespesaController.cadastrarDespesa) // Rota para cadastrar despesa
+router.get("/despesas", DespesaController.listarDespesa)
+router.post("/cadastro/receita", ReceitaController.cadastrarReceita) // Rota para cadastrar despesa
+router.get("/receitas", ReceitaController.listarReceita)
+router.post("/cadastro/categoria", CategoriaController.cadastrarCategoria) 
+router.get("/categorias", CategoriaController.listarCategoria)
 
 export default router;
