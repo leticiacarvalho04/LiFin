@@ -8,37 +8,42 @@ const colecaoCategorias = db.collection("categorias");
 export default class DespesaController {
   static async cadastrarDespesa(req: Request, res: Response) {
     try {
-      const dados: Despesas = req.body; // Dados da despesa recebidos no corpo da requisição
+      const dados: Despesas = req.body;
 
-      // Verificar se a categoria existe com base no ID da categoria
+      // Verifica se a categoria existe
       const categoriaDoc = await colecaoCategorias.doc(dados.categoriaId).get();
       if (!categoriaDoc.exists) {
         return res.status(400).json({ erro: "Categoria não encontrada" });
       }
 
-      // Função para converter data no formato DD/MM/YYYY para objeto Date
+      // Converte data de string para objeto Date
       const parseDate = (dateString: string): Date => {
         const [day, month, year] = dateString.split('/').map(Number);
         return new Date(year, month - 1, day);
       };
-
-      // Converter a data recebida para objeto Date
       const dataDespesa = parseDate(dados.data);
 
-      // Adicionar a despesa à coleção 'despesas'
-      const novaDespesa = await colecaoDespesas.add({
+      // Gerar ID automaticamente
+      const novaDespesaRef = colecaoDespesas.doc();
+      const novaDespesaId = novaDespesaRef.id;
+
+      // Gravar nova despesa
+      await novaDespesaRef.set({
+        id: novaDespesaId,
         nome: dados.nome,
-        categoriaId: dados.categoriaId, // Associar pelo ID da categoria
+        categoriaId: dados.categoriaId,
         valor: dados.valor,
-        data: dataDespesa, // Armazenar a data como objeto Date
+        data: dataDespesa,
         descricao: dados.descricao,
-        created_at: new Date(), // Definir data de criação atual
-        updated_at: new Date(), // Definir data de atualização atual
+        created_at: new Date(),
+        updated_at: new Date(),
       });
 
-      res.status(201).json({ id: novaDespesa.id, ...dados }); // Retorna o ID da nova despesa e os dados cadastrados
+      // Retorna o ID e os dados cadastrados
+      const { id, ...dadosSemId } = dados;
+      return res.status(201).json({ id: novaDespesaId, ...dadosSemId });
     } catch (erro) {
-      res.status(500).json({ erro: "Falha ao cadastrar despesa" }); // Trata erros
+      return res.status(500).json({ erro: "Falha ao cadastrar despesa" });
     }
   }
 
@@ -46,48 +51,38 @@ export default class DespesaController {
     try {
       const despesaSnapshot = await colecaoDespesas.get();
       const despesas = despesaSnapshot.docs.map((despesa) => {
-        const dataTimestamp = despesa.data().data; // Supondo que 'data' seja o campo do timestamp
+        const dataTimestamp = despesa.data().data;
 
-        // Converte o timestamp em uma data legível
         const formattedDate = dataTimestamp.toDate().toLocaleDateString('pt-BR', {
           day: '2-digit',
           month: 'long',
           year: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit',
         });
 
         return {
           id: despesa.id,
-          ...despesa.data() as Omit<Despesas, 'id'>,
-          data: formattedDate, // A data agora está formatada
-          updated_at: despesa.data().updated_at.toDate().toLocaleDateString('pt-BR', {
-            day: '2-digit',
-            month: 'long',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-          }),
+          ...despesa.data(),
+          data: formattedDate,
           created_at: despesa.data().created_at.toDate().toLocaleDateString('pt-BR', {
             day: '2-digit',
             month: 'long',
             year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
+          }),
+          updated_at: despesa.data().updated_at.toDate().toLocaleDateString('pt-BR', {
+            day: '2-digit',
+            month: 'long',
+            year: 'numeric',
           }),
         };
       });
 
       if (despesas.length === 0) {
-        return res.status(404).json({ message: 'Despesa não encontrada' });
+        return res.status(404).json({ message: 'Nenhuma despesa encontrada' });
       }
 
       return res.status(200).json(despesas);
     } catch (erro) {
-      res.status(500).json({ erro: "Falha ao listar despesas" }); // Trata erros
+      return res.status(500).json({ erro: "Falha ao listar despesas" });
     }
   }
 }

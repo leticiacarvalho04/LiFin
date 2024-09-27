@@ -25,8 +25,13 @@ export default class ReceitaController {
           // Converter a data recebida para objeto Date
           const datareceita = parseDate(dados.data);
       
-          // Adicionar a receita à coleção 'receitas'
-          const novaReceita = await colecaoReceitas.add({
+          // Gerar um novo ID para a receita
+          const novaReceitaRef = colecaoReceitas.doc();
+          const novaReceitaId = novaReceitaRef.id;
+
+          // Adicionar a receita à coleção 'receitas' com o ID gerado
+          await novaReceitaRef.set({
+            id: novaReceitaId,
             nome: dados.nome,
             categoriaId: dados.categoriaId, // Associar pelo ID da categoria
             valor: dados.valor,
@@ -35,8 +40,8 @@ export default class ReceitaController {
             created_at: new Date(), // Definir data de criação atual
             updated_at: new Date(), // Definir data de atualização atual
           });
-      
-          res.status(201).json({ id: novaReceita.id, ...dados }); // Retorna o ID da nova receita e os dados cadastrados
+
+          res.status(201).json({ id: novaReceitaId, ...dados }); // Retorna o ID da nova receita e os dados cadastrados
         } catch (erro) {
           res.status(500).json({ erro: "Falha ao cadastrar receita" }); // Trata erros
         }

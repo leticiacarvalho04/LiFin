@@ -1,4 +1,5 @@
 export default interface Despesas {
+    id?: string; // ID gerado pelo Firestore
     nome: string;
     categoriaId: string; // Alterado para string, representando o ID da categoria
     valor: string;

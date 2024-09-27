@@ -7,9 +7,10 @@ type DropdownProps = {
     value: string;
     valueColor?: string; // Adicionando a propriedade valueColor
     children: React.ReactNode;
+    extra?: React.ReactNode;
 };
 
-const Dropdown: React.FC<DropdownProps> = ({ title, date, value, valueColor = "#2e7d32", children }) => {
+const Dropdown: React.FC<DropdownProps> = ({ title, date, value, valueColor = "#2e7d32", children, extra }) => {
     const [isOpen, setIsOpen] = useState(false);
 
     const toggleDropdown = () => {
@@ -27,7 +28,12 @@ const Dropdown: React.FC<DropdownProps> = ({ title, date, value, valueColor = "#
                     <Text style={[styles.value, { color: valueColor }]}>R$ {value}</Text>
                 </View>
             </TouchableOpacity>
-            {isOpen && <View style={styles.content}>{children}</View>}
+            {isOpen && 
+                <View style={styles.content}>
+                    {children}
+                    <View>{extra && <View style={styles.extraContainer}>{extra}</View>}</View>
+                </View>
+            }
         </View>
     );
 };
@@ -70,6 +76,8 @@ const styles = StyleSheet.create({
         marginRight: 10,
     },
     content: {
+        display: "flex",
+        flexDirection: "row",
         backgroundColor: "#fff",
         borderRadius: 10,
         padding: 15,
@@ -82,6 +90,12 @@ const styles = StyleSheet.create({
         shadowRadius: 3.84,
         width: "100%",
         maxWidth: 350,
+    },
+    extraContainer: {
+        flex: 1,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginTop: 10,
     },
 });
 
