@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
-import { db } from "../config";
-import Despesas from "../interface/despesas";
+import { db } from "../config"; // Importa a configuração do Firebase
+import Despesas from "../interface/despesas"; // Importa a interface Despesas
 
 const colecaoDespesas = db.collection("despesas");
 const colecaoCategorias = db.collection("categorias");
@@ -8,42 +8,58 @@ const colecaoCategorias = db.collection("categorias");
 export default class DespesaController {
   static async cadastrarDespesa(req: Request, res: Response) {
     try {
-      const dados: Despesas = req.body;
+        const dados: Despesas = req.body;
+                
+        // Verificar se a data está no formato DD-MM-YYYY
+        if (!/^\d{2}-\d{2}-\d{4}$/.test(dados.data)) {
+            return res.status(400).json({ erro: 'Formato de data inválido. Use DD-MM-YYYY.' });
+        }
 
-      // Verifica se a categoria existe
-      const categoriaDoc = await colecaoCategorias.doc(dados.categoriaId).get();
-      if (!categoriaDoc.exists) {
-        return res.status(400).json({ erro: "Categoria não encontrada" });
-      }
+        const [dia, mes, ano] = dados.data.split('-');
 
-      // Converte data de string para objeto Date
-      const parseDate = (dateString: string): Date => {
-        const [day, month, year] = dateString.split('/').map(Number);
-        return new Date(year, month - 1, day);
-      };
-      const dataDespesa = parseDate(dados.data);
+        // Verifica se o ano é válido (ex: 1900 - 2100)
+        const anoNumero = parseInt(ano, 10);
+        if (anoNumero < 1900 || anoNumero > 2100) {
+            return res.status(400).json({ erro: 'Ano deve estar entre 1900 e 2100.' });
+        }
 
-      // Gerar ID automaticamente
-      const novaDespesaRef = colecaoDespesas.doc();
-      const novaDespesaId = novaDespesaRef.id;
+        // Converter a data para o formato YYYY-MM-DD para salvar no Firestore
+        const dataFormatada = `${ano}-${mes}-${dia}`; // Formato YYYY-MM-DD
+        console.log(`Verificando categoria com ID: ${req.body.categoriaId}`);
 
-      // Gravar nova despesa
-      await novaDespesaRef.set({
-        id: novaDespesaId,
-        nome: dados.nome,
-        categoriaId: dados.categoriaId,
-        valor: dados.valor,
-        data: dataDespesa,
-        descricao: dados.descricao,
-        created_at: new Date(),
-        updated_at: new Date(),
-      });
+        // Verifica se a categoria existe
+        const categoriaId = String(dados.categoriaId); // Converter para string
+        if (!categoriaId) {
+            return res.status(400).json({ erro: "ID da categoria é obrigatório." });
+        }
 
-      // Retorna o ID e os dados cadastrados
-      const { id, ...dadosSemId } = dados;
-      return res.status(201).json({ id: novaDespesaId, ...dadosSemId });
+        const categoriaDoc = await colecaoCategorias.doc(categoriaId).get();
+        if (!categoriaDoc.exists) {
+            return res.status(400).json({ erro: "Categoria não encontrada" });
+        }
+
+        // Gerar ID automaticamente
+        const novaDespesaRef = colecaoDespesas.doc();
+        const novaDespesaId = novaDespesaRef.id;
+
+        // Gravar nova despesa
+        await novaDespesaRef.set({
+            id: novaDespesaId,
+            nome: dados.nome,
+            categoriaId: categoriaId, // Agora é uma string
+            valor: dados.valor,
+            data: dataFormatada,
+            descricao: dados.descricao,
+            created_at: new Date(),
+            updated_at: new Date(),
+        });
+
+        // Retorna o ID e os dados cadastrados
+        const { id, ...dadosSemId } = dados;
+        return res.status(201).json({ id: novaDespesaId, ...dadosSemId });
     } catch (erro) {
-      return res.status(500).json({ erro: "Falha ao cadastrar despesa" });
+        console.error("Erro ao cadastrar despesa:", erro);
+        return res.status(500).json({ erro: "Falha ao cadastrar despesa" });
     }
   }
 
@@ -53,7 +69,8 @@ export default class DespesaController {
       const despesas = despesaSnapshot.docs.map((despesa) => {
         const dataTimestamp = despesa.data().data;
 
-        const formattedDate = dataTimestamp.toDate().toLocaleDateString('pt-BR', {
+        // O Firestore retorna a data como string, converta para Date se necessário
+        const formattedDate = new Date(dataTimestamp).toLocaleDateString('pt-BR', {
           day: '2-digit',
           month: 'long',
           year: 'numeric',
@@ -63,12 +80,12 @@ export default class DespesaController {
           id: despesa.id,
           ...despesa.data(),
           data: formattedDate,
-          created_at: despesa.data().created_at.toDate().toLocaleDateString('pt-BR', {
+          created_at: new Date(despesa.data().created_at).toLocaleDateString('pt-BR', {
             day: '2-digit',
             month: 'long',
             year: 'numeric',
           }),
-          updated_at: despesa.data().updated_at.toDate().toLocaleDateString('pt-BR', {
+          updated_at: new Date(despesa.data().updated_at).toLocaleDateString('pt-BR', {
             day: '2-digit',
             month: 'long',
             year: 'numeric',
@@ -82,6 +99,7 @@ export default class DespesaController {
 
       return res.status(200).json(despesas);
     } catch (erro) {
+      console.error(erro); // Log do erro para depuração
       return res.status(500).json({ erro: "Falha ao listar despesas" });
     }
   }

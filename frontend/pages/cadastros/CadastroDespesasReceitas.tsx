@@ -8,7 +8,7 @@ export default function CadastroDespesasReceitas() {
   const [selected, setSelected] = useState<'despesa' | 'receita'>('despesa');
   const initialValues = {
     Nome: '',
-    Valor: 0,
+    Valor: '',
     Categoria: '',
     Data: '',
     Descricao: ''
@@ -24,6 +24,11 @@ export default function CadastroDespesasReceitas() {
 
   const resetForm = () => {
     setFormValues(initialValues);
+  };
+
+  const formatarData = (data: string): string => {
+    const partes = data.split('-');
+    return `${partes[2]}-${partes[1]}-${partes[0]}`; // Formato DD-MM-YYYY
   };
 
   const botaoNome = selected === 'despesa' ? 'Despesa' : 'Receita';
@@ -60,27 +65,24 @@ export default function CadastroDespesasReceitas() {
           </TouchableOpacity>
         </View>
 
-        {selected === 'despesa' ? (
-          <SafeAreaView style={styles.form}>
-            <Formulario
-              values={formValues}
-              fields={['Nome', 'Valor', 'Categoria', 'Data', 'Descricao']} 
-              onInputChange={handleInputChange}
-              onReset={resetForm} // Passando a função de reset
-              btn={{ nome: 'Despesa', tipoSucesso: 'cadastrada', rota: 'cadastro/despesa', formValues }}
-            />
-          </SafeAreaView>
-        ) : (
-          <SafeAreaView style={styles.form}>
-            <Formulario
-                values={formValues}
-                fields={['Nome', 'Valor', 'Categoria', 'Data', 'Descricao']} 
-                onInputChange={handleInputChange}
-                onReset={resetForm} // Passando a função de reset
-                btn={{ nome: 'Receita', tipoSucesso: 'cadastrada', rota: 'cadastro/receita', formValues }}  
+        <SafeAreaView style={styles.form}>
+          <Formulario
+            values={formValues}
+            fields={['Nome', 'Valor', 'Categoria', 'Data', 'Descricao']} 
+            onInputChange={handleInputChange}
+            onReset={resetForm}
+            btn={{
+              nome: botaoNome,
+              tipoSucesso: 'cadastrada',
+              rota: selected === 'despesa' ? 'cadastro/despesa' : 'cadastro/receita',
+              formValues: {
+                ...formValues,
+                categoriaId: formValues.Categoria, // Use o ID da categoria
+                data: formatarData(formValues.Data) // Formatando a data
+              },
+            }}  
           />
-          </SafeAreaView>
-        )}
+        </SafeAreaView>
       </KeyboardAwareScrollView>
     </Layout>
   );

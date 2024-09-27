@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { TouchableOpacity, View, Text, StyleSheet } from 'react-native';
 import ModalSucesso from './modalSucesso';
 import axios from 'axios';
@@ -7,9 +7,9 @@ import { API_URL } from '../api';
 interface Props {
   nome: string;
   tipoSucesso: string;
-  onReset?: () => void; // Função para resetar o formulário
-  rota: string; // Rota para enviar os dados
-  formValues: any; // Valores do formulário
+  onReset?: () => void;
+  rota: string;
+  formValues: any;
 }
 
 export default function BtnSalvar(props: Props) {
@@ -21,28 +21,33 @@ export default function BtnSalvar(props: Props) {
       nome: props.formValues.Nome,
       categoriaId: props.formValues.Categoria,
       valor: props.formValues.Valor,
-      data: props.formValues.Data,
+      data: props.formValues.Data, // Aqui estamos utilizando a data já formatada no formato DD-MM-YYYY
       descricao: props.formValues.Descricao,
-      created_at: new Date().toLocaleDateString('pt-BR'),
-      updated_at: new Date().toLocaleDateString('pt-BR'),
     };
-  
+    console.log('Dados a serem enviados:', dataToSend);
+
     try {
       const response = await axios.post(`${API_URL}/${props.rota}`, dataToSend);
-      if (response.status === 200) {
-        props.onReset && props.onReset(); // Limpa o formulário após sucesso
+      if (response.status === 200 || 201) {
+        props.onReset && props.onReset();
+      } else {
+        console.error('Erro na resposta:', response);
       }
     } catch (error) {
-      console.error('Erro ao enviar dados:', error);
+      if (axios.isAxiosError(error)) {
+        console.error('Erro ao enviar dados:', error.response?.data || error.message);
+      } else {
+        console.error('Erro ao enviar dados:', error);
+      }
     }
   };
 
   const closeModal = () => {
     setModalVisible(false);
     if (props.onReset) {
-      props.onReset(); // Chama a função para resetar os valores do formulário
+      props.onReset();
     }
-  };  
+  };
 
   return (
     <View>
@@ -58,7 +63,7 @@ export default function BtnSalvar(props: Props) {
           tipoSucesso={props.tipoSucesso}
           onClose={closeModal}
           visible={modalVisible}
-        />      
+        />
       )}
     </View>
   );
@@ -71,7 +76,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     width: '100%',
     alignItems: 'center',
-    marginVertical: '8%', // Corrigido
+    marginVertical: '8%',
   },
   btnContent: {
     flexDirection: 'row',

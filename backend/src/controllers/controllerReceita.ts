@@ -10,20 +10,32 @@ export default class ReceitaController {
         try {
           const dados: Receitas = req.body; // Dados da despesa recebidos no corpo da requisição
       
-          // Verificar se a categoria existe com base no ID da categoria
-          const categoriaDoc = await colecaoCategorias.doc(dados.categoriaId).get();
-          if (!categoriaDoc.exists) {
+          if (!/^\d{2}-\d{2}-\d{4}$/.test(dados.data)) {
+            return res.status(400).json({ erro: 'Formato de data inválido. Use DD-MM-YYYY.' });
+        }
+
+        const [dia, mes, ano] = dados.data.split('-');
+
+        // Verifica se o ano é válido (ex: 1900 - 2100)
+        const anoNumero = parseInt(ano, 10);
+        if (anoNumero < 1900 || anoNumero > 2100) {
+            return res.status(400).json({ erro: 'Ano deve estar entre 1900 e 2100.' });
+        }
+
+        // Converter a data para o formato YYYY-MM-DD para salvar no Firestore
+        const dataFormatada = `${ano}-${mes}-${dia}`; // Formato YYYY-MM-DD
+        console.log(`Verificando categoria com ID: ${req.body.categoriaId}`);
+
+        // Verifica se a categoria existe
+        const categoriaId = String(dados.categoriaId); // Converter para string
+        if (!categoriaId) {
+            return res.status(400).json({ erro: "ID da categoria é obrigatório." });
+        }
+
+        const categoriaDoc = await colecaoCategorias.doc(categoriaId).get();
+        if (!categoriaDoc.exists) {
             return res.status(400).json({ erro: "Categoria não encontrada" });
-          }
-      
-          // Função para converter data no formato DD/MM/YYYY para objeto Date
-          const parseDate = (dateString: string): Date => {
-            const [day, month, year] = dateString.split('/').map(Number);
-            return new Date(year, month - 1, day);
-          };
-      
-          // Converter a data recebida para objeto Date
-          const datareceita = parseDate(dados.data);
+        }
       
           // Gerar um novo ID para a receita
           const novaReceitaRef = colecaoReceitas.doc();
@@ -35,13 +47,15 @@ export default class ReceitaController {
             nome: dados.nome,
             categoriaId: dados.categoriaId, // Associar pelo ID da categoria
             valor: dados.valor,
-            data: datareceita, // Armazenar a data como objeto Date
+            data: dataFormatada, // Armazenar a data como objeto Date
             descricao: dados.descricao,
             created_at: new Date(), // Definir data de criação atual
             updated_at: new Date(), // Definir data de atualização atual
           });
 
-          res.status(201).json({ id: novaReceitaId, ...dados }); // Retorna o ID da nova receita e os dados cadastrados
+          // Retorna o ID e os dados cadastrados
+        const { id, ...dadosSemId } = dados;
+          res.status(201).json({ id: novaReceitaId, ...dadosSemId }); // Retorna o ID da nova receita e os dados cadastrados
         } catch (erro) {
           res.status(500).json({ erro: "Falha ao cadastrar receita" }); // Trata erros
         }

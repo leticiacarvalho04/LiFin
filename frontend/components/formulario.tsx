@@ -13,7 +13,7 @@ interface PropsFormulario {
   values: { [key: string]: any };
   onInputChange?: (field: string, value: any) => void;
   onReset?: () => void;
-  btn: { nome: string; tipoSucesso: string, rota: string, formValues: any };
+  btn: { nome: string; tipoSucesso: string; rota: string; formValues: any };
 }
 
 export default function Formulario(props: PropsFormulario) {
@@ -40,11 +40,12 @@ export default function Formulario(props: PropsFormulario) {
     fetchCategorias();
   }, []);
 
+  // Alterado para DD-MM-YYYY
   const formatDate = (date: Date): string => {
     const day = String(date.getDate()).padStart(2, '0');
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const year = date.getFullYear();
-    return `${day}/${month}/${year}`;
+    return `${day}-${month}-${year}`; // Alterado para usar hífen
   };
 
   const handleDateChange = (event: any, selectedDate: Date | undefined) => {
@@ -57,17 +58,7 @@ export default function Formulario(props: PropsFormulario) {
 
   const getDateValue = (): Date => {
     const dateValue = values['Data'];
-    return dateValue ? new Date(dateValue.split('/').reverse().join('-')) : new Date();
-  };
-
-  const handleSubmit = (field: string) => {
-    const index = fields.indexOf(field);
-    if (index >= 0 && index < fields.length - 1) {
-      const nextField = fields[index + 1];
-      inputRefs.current[nextField]?.focus();
-    } else {
-      // Enviar o formulário ou fazer outra ação
-    }
+    return dateValue ? new Date(dateValue.split('-').reverse().join('-')) : new Date();
   };
 
   return (
@@ -101,8 +92,10 @@ export default function Formulario(props: PropsFormulario) {
               ) : (
                 <Picker
                   selectedValue={values['Categoria']}
-                  onValueChange={(itemValue) => onInputChange && onInputChange('Categoria', itemValue)}
-                  style={styles.input} // Aplica o estilo do input ao Picker
+                  onValueChange={(itemValue) => {
+                    onInputChange && onInputChange('Categoria', itemValue); // Use itemValue diretamente
+                  }}
+                  style={styles.input}
                 >
                   <Picker.Item label="Selecione uma categoria" value="" />
                   {categorias.map((categoria) => (
@@ -118,7 +111,6 @@ export default function Formulario(props: PropsFormulario) {
               placeholder={`Digite ${field}`}
               value={values[field]}
               onChangeText={(text) => onInputChange && onInputChange(field, text)}
-              onSubmitEditing={() => handleSubmit(field)}
               returnKeyType={index < fields.length - 1 ? 'next' : 'done'}
             />
           )}
@@ -130,7 +122,7 @@ export default function Formulario(props: PropsFormulario) {
         tipoSucesso={btn.tipoSucesso}
         onReset={onReset}
         rota={btn.rota}
-        formValues={btn.formValues}
+        formValues={values}
       />
     </KeyboardAwareScrollView>
   );
@@ -139,29 +131,28 @@ export default function Formulario(props: PropsFormulario) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    width: '100%',
+    padding: 20,
   },
   contentContainer: {
-    padding: 10,
     justifyContent: 'center',
   },
   inputContainer: {
-    margin:'5%',
     marginBottom: 15,
   },
   label: {
+    marginBottom: 5,
     fontSize: 16,
     fontWeight: 'bold',
-    marginBottom: 5,
   },
   input: {
     borderWidth: 1,
     borderColor: '#ccc',
-    padding: 10,
     borderRadius: 5,
-    width: '100%',
+    padding: 10,
   },
   dateText: {
-    fontSize: 16,
     color: '#000',
+    fontSize: 16,
   },
 });
