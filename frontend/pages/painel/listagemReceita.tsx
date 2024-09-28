@@ -34,8 +34,6 @@ export default function ListagemReceitas() {
                     categoriaId: receita.categoriaId,
                     data: receita.data.split(" às ")[0],
                     descricao: receita.descricao,
-                    created_at: receita.created_at,
-                    updated_at: receita.updated_at,
                 }));
 
                 setPainelValues(receitasData);
@@ -145,10 +143,11 @@ export default function ListagemReceitas() {
                             </View>
                         ) : (
                             <View>
+                                <Text>Nome: {receita.nome}</Text>
+                                <Text>Valor: {receita.valor}</Text>
+                                <Text>Data: {receita.data}</Text>
                                 <Text>Categoria: {getCategoriaNome(receita.categoriaId)}</Text>
                                 <Text>Descrição: {receita.descricao}</Text>
-                                <Text>Criado em: {receita.created_at}</Text>
-                                <Text>Atualizado em: {receita.updated_at}</Text>
                                 <View style={styles.botoes}>
                                     <TouchableOpacity onPress={() => handleEdit(index)} style={styles.editButton}>
                                         <Icon name='edit' size={24} color="#000" />

@@ -49,8 +49,6 @@ export default class ReceitaController {
             valor: dados.valor,
             data: dataFormatada, // Armazenar a data como objeto Date
             descricao: dados.descricao,
-            created_at: new Date(), // Definir data de criação atual
-            updated_at: new Date(), // Definir data de atualização atual
           });
 
           // Retorna o ID e os dados cadastrados
@@ -77,17 +75,7 @@ export default class ReceitaController {
               return {
                   id: receita.id,
                   ...receita.data() as Omit<Receitas, 'id'>,
-                  data: formattedDate, // A data agora está formatada
-                  created_at: new Date(receita.data().created_at).toLocaleDateString('pt-BR', {
-                    day: '2-digit',
-                    month: 'long',
-                    year: 'numeric',
-                  }),
-                  updated_at: new Date(receita.data().updated_at).toLocaleDateString('pt-BR', {
-                    day: '2-digit',
-                    month: 'long',
-                    year: 'numeric',
-                  }),
+                  data: formattedDate,
               };
           });
       

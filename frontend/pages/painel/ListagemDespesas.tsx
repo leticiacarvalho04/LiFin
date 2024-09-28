@@ -5,17 +5,16 @@ import Despesas from "../../types/despesas";
 import { Categoria } from "../../types/categoria";
 import Dropdown from "../../components/dropdown";
 import { API_URL } from "../../api";
-import Icon from "react-native-vector-icons/MaterialIcons"; // Corrigi a importação do ícone
-import Swal from 'sweetalert2'; // Importe o SweetAlert
+import Icon from "react-native-vector-icons/MaterialIcons";
+import Swal from 'sweetalert2';
 
 export default function ListagemDespesas() {
     const [painelValues, setPainelValues] = useState<Despesas[]>([]);
     const [categorias, setCategorias] = useState<Categoria[]>([]);
     const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
-    const [isEditing, setIsEditing] = useState<number | null>(null); // Alterei para armazenar o índice da despesa em edição
-    const [editedDespesa, setEditedDespesa] = useState<Despesas | null>(null); // Estado para armazenar a despesa em edição
+    const [isEditing, setIsEditing] = useState<number | null>(null);
+    const [editedDespesa, setEditedDespesa] = useState<Despesas | null>(null);
 
-    // Função para buscar as categorias
     const fetchCategorias = async () => {
         try {
             const response = await axios.get(`${API_URL}/categorias`);
@@ -35,10 +34,8 @@ export default function ListagemDespesas() {
                         nome: despesa.nome,
                         valor: despesa.valor,
                         categoriaId: despesa.categoriaId,
-                        data: despesa.data.split(" às ")[0],
+                        data: formatDate(despesa.data), // Formatação correta da data
                         descricao: despesa.descricao,
-                        created_at: despesa.created_at,
-                        updated_at: despesa.updated_at
                     };
                 });
                 setPainelValues(despesasData);
@@ -56,12 +53,27 @@ export default function ListagemDespesas() {
         return categoria ? categoria.nome : "Categoria desconhecida";
     };
 
-    const formatDate = (date: Date): string => {
-        const day = String(date.getDate()).padStart(2, '0');
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const year = date.getFullYear();
-        return `${day}-${month}-${year}`; // Alterado para usar hífen
-      };
+    const formatDate = (dateValue: string): string => {
+        const [day, month, year] = dateValue.split('-'); // Desconstrói a string no formato DD-MM-YYYY
+
+        // Verifica se todos os valores estão disponíveis
+        if (!day || !month || !year) {
+            console.error("Formato de data inválido:", dateValue);
+            return "Data inválida"; // Retorna uma string padrão em caso de data inválida
+        }
+
+        // Cria um objeto Date com os valores extraídos
+        const formattedDate = new Date(parseInt(year, 10), parseInt(month, 10) - 1, parseInt(day, 10));
+        
+        // Verifica se a data é válida
+        if (isNaN(formattedDate.getTime())) {
+            console.error("Data inválida:", dateValue);
+            return "Data inválida"; // Retorna uma string padrão em caso de data inválida
+        }
+
+        const options: Intl.DateTimeFormatOptions = { day: '2-digit', month: 'long', year: 'numeric' };
+        return formattedDate.toLocaleDateString('pt-BR', options); // Formata para o padrão desejado
+    };
 
     const handleEdit = (index: number) => {
         setIsEditing(isEditing === index ? null : index);
@@ -77,6 +89,8 @@ export default function ListagemDespesas() {
     const handleSave = async (index: number) => {
         if (editedDespesa) {
             try {
+                // Atualiza a data da despesa antes de salvar
+                editedDespesa.data = formatDateToSave(editedDespesa.data); // Formato para o backend
                 await axios.put(`${API_URL}/despesas/${editedDespesa.id}`, editedDespesa);
                 const updatedPainelValues = [...painelValues];
                 updatedPainelValues[index] = editedDespesa;
@@ -87,6 +101,12 @@ export default function ListagemDespesas() {
                 console.error("Erro ao salvar despesa:", error);
             }
         }
+    };
+
+    const formatDateToSave = (date: string): string => {
+        // Formata a data para o padrão ISO ou qualquer formato que o backend espera
+        const dateObj = new Date(date);
+        return dateObj.toISOString(); // Formato ISO para o backend
     };
 
     const handleCancel = () => {
@@ -123,8 +143,8 @@ export default function ListagemDespesas() {
                 <View key={index}>
                     <Dropdown 
                         title={despesa.nome} 
-                        date={despesa.data} 
-                        value={despesa.valor.toString()} // Certifique-se que o valor é uma string
+                        date={despesa.data} // Agora já está no formato correto
+                        value={despesa.valor.toString()} 
                         valueColor="#d32f2f" 
                     >
                         {isEditing === index ? (
@@ -155,10 +175,11 @@ export default function ListagemDespesas() {
                             </View>
                         ) : (
                             <View>
+                                <Text>Nome: {despesa.nome}</Text>
+                                <Text>Valor: {despesa.valor}</Text>
+                                <Text>Data: {despesa.data}</Text>
                                 <Text>Categoria: {getCategoriaNome(despesa.categoriaId)}</Text>
                                 <Text>Descrição: {despesa.descricao}</Text>
-                                <Text>Criado em: {despesa.created_at}</Text>
-                                <Text>Atualizado em: {despesa.updated_at}</Text>
                                 <View style={styles.botoes}>
                                     <TouchableOpacity onPress={() => handleEdit(index)} style={styles.editButton}>
                                         <Icon name='edit' size={24} color="#000" />
@@ -183,103 +204,46 @@ const styles = StyleSheet.create({
     },
     botoes: {
         flexDirection: 'row',
-        justifyContent: 'center', // Alterado para 'center'
+        justifyContent: 'center',
         marginVertical: 20,
         alignItems: 'center',
         width: '100%',
         gap: 100, 
-        marginLeft: 17, // Adicione margem à esquerda
+        marginLeft: 17,
     },
     editButton: {
         backgroundColor: "#fff",
         borderRadius: 10,
-        padding: 10,
-        marginHorizontal: 5, // Adicione margens horizontais
-        shadowColor: "#000",
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.1,
-        shadowRadius: 3.84,
-        elevation: 5,
+        padding: 5,
     },
     deleteButton: {
         backgroundColor: "#fff",
         borderRadius: 10,
-        padding: 10,
-        marginHorizontal: 5, // Adicione margens horizontais
-        shadowColor: "#000",
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.1,
-        shadowRadius: 3.84,
-        elevation: 5,
+        padding: 5,
     },
     saveButton: {
-        backgroundColor: "#4CAF50",
+        backgroundColor: "#4caf50",
         borderRadius: 10,
-        padding: 10,
-        marginVertical: 10,
-        shadowColor: "#000",
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.1,
-        shadowRadius: 3.84,
-        elevation: 5,
+        padding: 5,
+        marginRight: 10,
     },
     saveButtonText: {
         color: "#fff",
-        textAlign: "center",
-    },
-    input: {
-        backgroundColor: "#fff",
-        borderRadius: 10,
-        padding: 10,
-        marginVertical: 10,
-        shadowColor: "#000",
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.1,
-        shadowRadius: 3.84,
-        elevation: 5,
-    },
-    editContainer: {
-        backgroundColor: "#f9f9f9",
-        padding: 20,
-        borderRadius: 10,
-        marginVertical: 10,
-        shadowColor: "#000",
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.1,
-        shadowRadius: 3.84,
-        elevation: 5,
     },
     cancelButton: {
-        backgroundColor: "#f44336", // Vermelho
+        backgroundColor: "#f44336",
         borderRadius: 10,
-        padding: 10,
-        marginVertical: 10,
-        shadowColor: "#000",
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.1,
-        shadowRadius: 3.84,
-        elevation: 5,
+        padding: 5,
     },
     cancelButtonText: {
         color: "#fff",
-        textAlign: "center",
-    },    
+    },
+    input: {
+        borderWidth: 1,
+        borderColor: "#000",
+        borderRadius: 5,
+        marginVertical: 5,
+        padding: 5,
+        width: '100%',
+    },
 });
