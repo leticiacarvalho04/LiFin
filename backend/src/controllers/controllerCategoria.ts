@@ -33,20 +33,32 @@ export default class CategoriaController {
 
     static async editarCategoria(req: Request, res: Response) {
         try {
-            const { id } = req.params; // ID da categoria vindo dos parâmetros da rota
-            const dadosAtualizados: Partial<Categoria> = req.body; // Dados atualizados da categoria
-
+            const { id } = req.params;
+            console.log("ID recebido:", id);
+            const dadosAtualizados: Partial<Categoria> = req.body;
+            console.log("Dados recebidos para atualização:", dadosAtualizados);
+    
             const categoriaSnapshot = await colecaoCategorias.doc(id).get();
             if (!categoriaSnapshot.exists) {
                 res.status(404).json({ erro: "Categoria não encontrada" });
                 return;
             }
-
-            await colecaoCategorias.doc(id).update(dadosAtualizados); // Atualiza a categoria com os novos dados
-
+    
+            await colecaoCategorias.doc(id).update(dadosAtualizados);
             res.status(200).json({ id, ...dadosAtualizados });
         } catch (erro) {
+            console.error("Erro ao editar categoria:", erro); // Log completo do erro
             res.status(500).json({ erro: "Falha ao editar categoria" });
+        }
+    }   
+    
+    static async excluirCategoria(req: Request, res: Response) {
+        try {
+            const { id } = req.params;
+            await colecaoCategorias.doc(id).delete();
+            res.status(204).end();
+        } catch (erro) {
+            res.status(500).json({ erro: "Falha ao excluir categoria" });
         }
     }
 }

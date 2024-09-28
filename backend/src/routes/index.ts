@@ -15,4 +15,6 @@ router.get("/categorias", CategoriaController.listarCategoria);
 
 router.put("/atualizar/categoria/:id", CategoriaController.editarCategoria);
 
+router.delete("/excluir/despesas/:id", CategoriaController.excluirCategoria);
+
 export default router;

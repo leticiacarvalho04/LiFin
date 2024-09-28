@@ -11,7 +11,6 @@ import Swal from 'sweetalert2';
 export default function ListagemDespesas() {
     const [painelValues, setPainelValues] = useState<Despesas[]>([]);
     const [categorias, setCategorias] = useState<Categoria[]>([]);
-    const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
     const [isEditing, setIsEditing] = useState<number | null>(null);
     const [editedDespesa, setEditedDespesa] = useState<Despesas | null>(null);
 
