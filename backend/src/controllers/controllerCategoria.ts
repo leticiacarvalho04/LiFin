@@ -53,8 +53,8 @@ export default class CategoriaController {
     }   
     
     static async excluirCategoria(req: Request, res: Response) {
+        const { id } = req.params;
         try {
-            const { id } = req.params;
             await colecaoCategorias.doc(id).delete();
             res.status(204).end();
         } catch (erro) {

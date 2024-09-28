@@ -9,14 +9,17 @@ import Icon from 'react-native-vector-icons/Feather'; // Importando o ícone
 import { API_URL } from '../../api';
 import Swal from 'sweetalert2';
 import ModalSucesso from '../../components/modalSucesso';
+import ModalConfirmacaoDelete from '../../components/modalConfirmacaoDelete';
 
 export default function PainelCategorias() {
   const initialValues: Categoria[] = [];
   const [categorias, setCategorias] = useState<Categoria[]>(initialValues);
   const [isEditing, setIsEditing] = useState<number | null>(null); // Index da categoria sendo editada
   const [editedCategoria, setEditedCategoria] = useState<Categoria | null>(null);
-  const [modalVisible, setModalVisible] = useState(false); // Estado para controlar visibilidade do modal
-  const [modalMessage, setModalMessage] = useState({ nome: '', tipoSucesso: '' }); // Estado para a mensagem do modal
+  const [modalVisible, setModalVisible] = useState(false); // Modal de sucesso
+  const [modalMessage, setModalMessage] = useState({ nome: '', tipoSucesso: '' });
+  const [confirmDeleteVisible, setConfirmDeleteVisible] = useState(false); // Modal de confirmação de exclusão
+  const [categoriaToDelete, setCategoriaToDelete] = useState<Categoria | null>(null); 
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
 
   useEffect(() => {
@@ -73,23 +76,33 @@ export default function PainelCategorias() {
     setEditedCategoria(null);
   };
 
-  const handleDelete = async (index: number) => {
-    try {
-      await axios.delete(`${API_URL}/excluir/despesas/${categorias[index].id}`);
-      const newCategorias = [...categorias];
-      newCategorias.splice(index, 1);
-      setCategorias(newCategorias);
+  const handleDelete = (categoria: Categoria) => {
+    setCategoriaToDelete(categoria); 
+    setConfirmDeleteVisible(true);
+  };
 
-      // Exibir modal de sucesso após deleção
-      setModalMessage({ nome: 'Categoria', tipoSucesso: 'deletada' });
-      setModalVisible(true);
-    } catch (error) {
-      console.error("Erro ao deletar categoria:", error);
-    }
+  const confirmDelete = async () => {
+      if (categoriaToDelete) {
+          try {
+              await axios.delete(`${API_URL}/excluir/categoria/${categoriaToDelete.id}`);
+              setCategorias(prev => prev.filter(categoria => categoria.id !== categoriaToDelete.id));
+              setModalMessage({ nome: 'Categoria', tipoSucesso: 'excluída' });
+              setModalVisible(true); 
+          } catch (error) {
+              console.error("Erro ao deletar despesa:", error);
+          } finally {
+              setConfirmDeleteVisible(false); 
+              setCategoriaToDelete(null);
+          }
+      }
   };
 
   const handleCloseModal = () => {
-    setModalVisible(false); // Fechar o modal
+      setModalVisible(false); 
+  };
+
+  const handleCloseConfirmModal = () => {
+      setConfirmDeleteVisible(false);
   };
 
   return (
@@ -126,7 +139,7 @@ export default function PainelCategorias() {
                     <TouchableOpacity onPress={() => handleEdit(index)} style={styles.editButton}>
                       <Icon name='edit' size={24} color="#000" />
                     </TouchableOpacity>
-                    <TouchableOpacity onPress={() => handleDelete(index)} style={styles.deleteButton}>
+                    <TouchableOpacity onPress={() => handleDelete(categoria)} style={styles.deleteButton}>
                       <Icon name='trash' size={24} color="#000" />
                     </TouchableOpacity>
                   </View>
@@ -139,12 +152,17 @@ export default function PainelCategorias() {
           <Icon name='plus-circle' size={40} color="#000" />
         </TouchableOpacity>
 
-        {/* Modal de sucesso */}
-        <ModalSucesso
-          nome={modalMessage.nome}
-          tipoSucesso={modalMessage.tipoSucesso}
-          visible={modalVisible}
-          onClose={handleCloseModal}
+        <ModalSucesso 
+          nome="Despesa"
+          visible={modalVisible} 
+          tipoSucesso={`A ${modalMessage.nome} foi ${modalMessage.tipoSucesso} com sucesso!`} 
+          onClose={handleCloseModal} 
+        />
+        <ModalConfirmacaoDelete 
+          visible={confirmDeleteVisible} 
+          onClose={handleCloseConfirmModal} 
+          onConfirm={confirmDelete} 
+          nome={categoriaToDelete ? categoriaToDelete.nome : ''} 
         />
       </View>
     </Layout>

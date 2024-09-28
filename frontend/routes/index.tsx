@@ -3,7 +3,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import Home from '../pages/home/home'; // Adicione esta linha
 import CadastroDespesasReceitas from '../pages/cadastros/CadastroDespesasReceitas';
 import PainelCategorias from '../pages/painel/painelCategorias';
-import PainelDespesasReceitas from '../pages/painel/PainelDespesasReceitas';
+import PainelDespesasReceitas from '../pages/painel/painelDespesasReceitas';
 import PainelMetas from '../pages/painel/painelMetas';
 import PainelOrcamentos from '../pages/painel/painelOrcamentos';
 import PainelRelatorios from '../pages/painel/painelRelatorios';

@@ -53,16 +53,15 @@ export default function ListagemDespesas() {
         fetchDespesas();
     }, []);
 
-    // Função para formatar a data no formato "dd de <nome do mês> de yyyy"
     const formatarData = (dataString: string): string => {
-        const [dia, mes, ano] = dataString.split('-'); // Desestruturando a data
+        const [dia, mes, ano] = dataString.split('-'); 
         const meses = [
             "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
             "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
         ];
         
-        const mesNome = meses[parseInt(mes, 10) - 1]; // Obtendo o nome do mês
-        return `${dia} de ${mesNome} de ${ano}`; // Formatando a data
+        const mesNome = meses[parseInt(mes, 10) - 1]; 
+        return `${dia} de ${mesNome} de ${ano}`;
     };
 
     const getCategoriaNome = (categoriaId: string) => {
@@ -82,12 +81,11 @@ export default function ListagemDespesas() {
         setEditedDespesa(painelValues[index]);
     
         if (painelValues[index].data) {
-            // Converta a string da data para o formato adequado (YYYY-MM-DD)
-            const dateParts = painelValues[index].data.split('-'); // Divide a string de data (DD-MM-YYYY)
-            const day = parseInt(dateParts[0], 10); // Dia
-            const month = parseInt(dateParts[1], 10) - 1; // Mês (os meses começam em 0 no objeto Date)
-            const year = parseInt(dateParts[2], 10); // Ano
-            setDate(new Date(day, month, year)); // Define a data correta no state
+            const dateParts = painelValues[index].data.split('-'); 
+            const day = parseInt(dateParts[0], 10);
+            const month = parseInt(dateParts[1], 10) - 1; 
+            const year = parseInt(dateParts[2], 10);
+            setDate(new Date(day, month, year)); 
         }
     };
 
@@ -111,7 +109,7 @@ export default function ListagemDespesas() {
     const handleSave = async (index: number) => {
         if (editedDespesa) {
             try {
-                editedDespesa.data = formatDateToSave(date); // Formata a data para salvar corretamente
+                editedDespesa.data = formatDateToSave(date);
                 await axios.put(`${API_URL}/atualizar/despesa/${editedDespesa.id}`, editedDespesa);
                 const updatedPainelValues = [...painelValues];
                 updatedPainelValues[index] = editedDespesa;
@@ -132,38 +130,38 @@ export default function ListagemDespesas() {
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const day = String(date.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`; // Formato para salvar no backend (YYYY-MM-DD)
+        return `${year}-${month}-${day}`; 
     };
 
     const handleDelete = (despesa: Despesas) => {
-        setDespesaToDelete(despesa); // Armazena a despesa que será excluída
-        setConfirmDeleteVisible(true); // Mostra o modal de confirmação
+        setDespesaToDelete(despesa); 
+        setConfirmDeleteVisible(true);
     };
 
     const confirmDelete = async () => {
         if (despesaToDelete) {
             try {
                 await axios.delete(`${API_URL}/excluir/despesa/${despesaToDelete.id}`);
-                setPainelValues(prev => prev.filter(despesa => despesa.id !== despesaToDelete.id)); // Remove a despesa da lista
+                setPainelValues(prev => prev.filter(despesa => despesa.id !== despesaToDelete.id));
                 setModalMessage({ nome: 'Despesa', tipoSucesso: 'excluída' });
-                setModalVisible(true); // Mostra o modal de sucesso
+                setModalVisible(true); 
             } catch (error) {
                 console.error("Erro ao deletar despesa:", error);
             } finally {
-                setConfirmDeleteVisible(false); // Fecha o modal de confirmação
-                setDespesaToDelete(null); // Limpa a despesa a ser excluída
+                setConfirmDeleteVisible(false); 
+                setDespesaToDelete(null);
             }
         }
     };
 
     const handleCloseModal = () => {
-        setModalVisible(false); // Fechar modal de sucesso
+        setModalVisible(false); 
     };
 
     const handleCloseConfirmModal = () => {
         setConfirmDeleteVisible(false);
     };
-    
+
     return (
         <View style={styles.container}>
             {painelValues.map((despesa: Despesas, index: number) => (
@@ -205,7 +203,7 @@ export default function ListagemDespesas() {
                                 {showDatePicker && (
                                     <DateTimePicker
                                         mode="date"
-                                        value={date} // Agora passando a data correta aqui
+                                        value={date} 
                                         onChange={handleDateChange}
                                         display="default"
                                     />
@@ -265,7 +263,7 @@ export default function ListagemDespesas() {
                 visible={confirmDeleteVisible} 
                 onClose={handleCloseConfirmModal} 
                 onConfirm={confirmDelete} 
-                nome={despesaToDelete ? despesaToDelete.nome : ''} // Nome da despesa a ser excluída
+                nome={despesaToDelete ? despesaToDelete.nome : ''} 
             />
 
         </View>
@@ -303,7 +301,7 @@ const styles = StyleSheet.create({
         width: '100%',
     },
     saveButton: {
-        backgroundColor: '#4caf50',
+        backgroundColor: '#A164E3',
         borderRadius: 5,
         padding: 10,
     },
@@ -312,7 +310,7 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
     cancelButton: {
-        backgroundColor: '#f44336',
+        backgroundColor: '#000',
         borderRadius: 5,
         padding: 10,
     },

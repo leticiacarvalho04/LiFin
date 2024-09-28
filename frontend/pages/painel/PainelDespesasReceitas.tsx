@@ -2,7 +2,7 @@ import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Layout from "../../components/layout";
 import { useState } from "react";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
-import ListagemDespesas from "./ListagemDespesas";
+import ListagemDespesas from "./listagemDespesas";
 import ListagemReceitas from "./listagemReceita";
 
 export default function PainelDespesasReceitas() {

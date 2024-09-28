@@ -62,26 +62,27 @@ export default class ReceitaController {
       static async listarReceita (req: Request, res: Response) {
         try{
           const receitaSnapshot = await colecaoReceitas.get();
+
           const receitas = receitaSnapshot.docs.map((receita) => {
               const dataTimestamp = receita.data().data; // Supondo que 'data' seja o campo do timestamp
       
-             // O Firestore retorna a data como string, converta para Date se necessário
-              const formattedDate = new Date(dataTimestamp).toLocaleDateString('pt-BR', {
-                day: '2-digit',
-                month: 'long',
-                year: 'numeric',
-              });
+             // Verificar se a data está no formato correto (YYYY-MM-DD)
+          if (typeof dataTimestamp !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(dataTimestamp)) {
+            console.error(`Data inválida encontrada: ${dataTimestamp}`);
+            // Neste caso, continue com a próxima despesa
+            return null;
+          }
+    
+          const [ano, mes, dia] = dataTimestamp.split('-');
+          const dataFormatada = `${dia}-${mes}-${ano}`; // Formato DD-MM-YYYY
+    
       
               return {
                   id: receita.id,
                   ...receita.data() as Omit<Receitas, 'id'>,
-                  data: formattedDate,
+                  data: dataFormatada,
               };
-          });
-      
-          if (receitas.length === 0) {
-              return res.status(404).json({ message: 'Receita não encontrada' });
-          }
+          }).filter(receita => receita !== null);
       
           return res.status(200).json(receitas);
         } catch (erro) {
@@ -89,4 +90,26 @@ export default class ReceitaController {
           return res.status(500).json({ erro: "Falha ao listar despesas" });
         }
       }
+
+    static async atualizarReceita(req: Request, res: Response) {
+      const { id } = req.params;
+      const dadosAtualizados = req.body;
+      try {
+        await colecaoReceitas.doc(id).update(dadosAtualizados);
+        res.status(200).json({ id, ...dadosAtualizados });
+      } catch (erro) {
+        console.error("Erro ao editar receita:", erro);
+        res.status(500).json({ erro: "Falha ao editar receita" });
+      }
+    }
+
+    static async deletarReceita(req: Request, res: Response) {
+      const { id } = req.params;
+      try {
+        await colecaoReceitas.doc(id).delete();
+        res.status(204).end();
+      } catch (erro) {
+        res.status(500).json({ erro: "Falha ao excluir receita" });
+      }
+    }
 }
