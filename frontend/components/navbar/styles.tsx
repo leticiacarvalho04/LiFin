@@ -14,7 +14,7 @@ const styles = StyleSheet.create({
     menuContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginTop: 35,
+        marginTop: 25,
     },
     menuIcon: {
         display: 'flex',

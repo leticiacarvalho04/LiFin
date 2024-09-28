@@ -6,8 +6,6 @@ import { Categoria } from "../../types/categoria";
 import Dropdown from "../../components/dropdown";
 import { API_URL } from "../../api";
 import Icon from "react-native-vector-icons/MaterialIcons"; // Corrigi a importação do ícone
-import { NavigationProp, useNavigation } from "@react-navigation/native";
-import { RootStackParamList } from "../../routes";
 import Swal from 'sweetalert2'; // Importe o SweetAlert
 
 export default function ListagemDespesas() {
@@ -16,8 +14,6 @@ export default function ListagemDespesas() {
     const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
     const [isEditing, setIsEditing] = useState<number | null>(null); // Alterei para armazenar o índice da despesa em edição
     const [editedDespesa, setEditedDespesa] = useState<Despesas | null>(null); // Estado para armazenar a despesa em edição
-
-    const navigation = useNavigation<NavigationProp<RootStackParamList>>();
 
     // Função para buscar as categorias
     const fetchCategorias = async () => {
@@ -60,9 +56,12 @@ export default function ListagemDespesas() {
         return categoria ? categoria.nome : "Categoria desconhecida";
     };
 
-    const toggleDropdown = (index: number) => {
-        setExpandedIndex(expandedIndex === index ? null : index);
-    };
+    const formatDate = (date: Date): string => {
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        return `${day}-${month}-${year}`; // Alterado para usar hífen
+      };
 
     const handleEdit = (index: number) => {
         setIsEditing(isEditing === index ? null : index);
@@ -88,6 +87,11 @@ export default function ListagemDespesas() {
                 console.error("Erro ao salvar despesa:", error);
             }
         }
+    };
+
+    const handleCancel = () => {
+        setIsEditing(null);
+        setEditedDespesa(null);
     };
 
     const handleDelete = async (index: number) => {
@@ -140,9 +144,14 @@ export default function ListagemDespesas() {
                                     value={editedDespesa?.descricao}
                                     onChangeText={(text) => handleInputChange('descricao', text)}
                                 />
-                                <TouchableOpacity onPress={() => handleSave(index)} style={styles.saveButton}>
-                                    <Text style={styles.saveButtonText}>Salvar</Text>
-                                </TouchableOpacity>
+                                <View style={styles.botoes}>
+                                    <TouchableOpacity onPress={() => handleSave(index)} style={styles.saveButton}>
+                                        <Text style={styles.saveButtonText}>Salvar</Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity onPress={handleCancel} style={styles.cancelButton}>
+                                        <Text style={styles.cancelButtonText}>Cancelar</Text>
+                                    </TouchableOpacity>
+                                </View>
                             </View>
                         ) : (
                             <View>
@@ -150,7 +159,7 @@ export default function ListagemDespesas() {
                                 <Text>Descrição: {despesa.descricao}</Text>
                                 <Text>Criado em: {despesa.created_at}</Text>
                                 <Text>Atualizado em: {despesa.updated_at}</Text>
-                                <View>
+                                <View style={styles.botoes}>
                                     <TouchableOpacity onPress={() => handleEdit(index)} style={styles.editButton}>
                                         <Icon name='edit' size={24} color="#000" />
                                     </TouchableOpacity>
@@ -172,11 +181,20 @@ const styles = StyleSheet.create({
         padding: 10,
         alignItems: 'center',
     },
+    botoes: {
+        flexDirection: 'row',
+        justifyContent: 'center', // Alterado para 'center'
+        marginVertical: 20,
+        alignItems: 'center',
+        width: '100%',
+        gap: 100, 
+        marginLeft: 17, // Adicione margem à esquerda
+    },
     editButton: {
         backgroundColor: "#fff",
         borderRadius: 10,
         padding: 10,
-        marginVertical: 10,
+        marginHorizontal: 5, // Adicione margens horizontais
         shadowColor: "#000",
         shadowOffset: {
             width: 0,
@@ -190,7 +208,7 @@ const styles = StyleSheet.create({
         backgroundColor: "#fff",
         borderRadius: 10,
         padding: 10,
-        marginVertical: 10,
+        marginHorizontal: 5, // Adicione margens horizontais
         shadowColor: "#000",
         shadowOffset: {
             width: 0,
@@ -246,4 +264,22 @@ const styles = StyleSheet.create({
         shadowRadius: 3.84,
         elevation: 5,
     },
+    cancelButton: {
+        backgroundColor: "#f44336", // Vermelho
+        borderRadius: 10,
+        padding: 10,
+        marginVertical: 10,
+        shadowColor: "#000",
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.1,
+        shadowRadius: 3.84,
+        elevation: 5,
+    },
+    cancelButtonText: {
+        color: "#fff",
+        textAlign: "center",
+    },    
 });

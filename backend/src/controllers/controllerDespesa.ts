@@ -103,4 +103,53 @@ export default class DespesaController {
       return res.status(500).json({ erro: "Falha ao listar despesas" });
     }
   }
+
+  static async editarDespesa(req: Request, res: Response) {
+    try{
+      const { id } = req.params;
+      const dados: Despesas = req.body;
+
+      // Verificar se a data está no formato DD-MM-YYYY
+      if (!/^\d{2}-\d{2}-\d{4}$/.test(dados.data)) {
+          return res.status(400).json({ erro: 'Formato de data inválido. Use DD-MM-YYYY.' });
+      }
+
+      const [dia, mes, ano] = dados.data.split('-');
+
+      // Verifica se o ano é válido (ex: 1900 - 2100)
+      const anoNumero = parseInt(ano, 10);
+      if (anoNumero < 1900 || anoNumero > 2100) {
+          return res.status(400).json({ erro: 'Ano deve estar entre 1900 e 2100.' });
+      }
+
+      // Converter a data para o formato YYYY-MM-DD para salvar no Firestore
+      const dataFormatada = `${ano}-${mes}-${dia}`; // Formato YYYY-MM-DD
+
+      // Verifica se a categoria existe
+      const categoriaId = String(dados.categoriaId); // Converter para string
+      if (!categoriaId) {
+          return res.status(400).json({ erro: "ID da categoria é obrigatório." });
+      }
+
+      const categoriaDoc = await colecaoCategorias.doc(categoriaId).get();
+      if (!categoriaDoc.exists) {
+          return res.status(400).json({ erro: "Categoria não encontrada" });
+      }
+
+      // Atualizar despesa
+      await colecaoDespesas.doc(id).update({
+          nome: dados.nome,
+          categoriaId: categoriaId, // Agora é uma string
+          valor: dados.valor,
+          data: dataFormatada,
+          descricao: dados.descricao,
+          updated_at: new Date(),
+      });
+
+      return res.status(200).json({ id, ...dados });
+    } catch(erro){
+      console.error(erro);
+      return res.status(500).json({ erro: "Falha ao editar despesa" });
+    }
+  }
 }
