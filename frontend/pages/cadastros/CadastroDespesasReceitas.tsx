@@ -26,6 +26,11 @@ export default function CadastroDespesasReceitas() {
     setFormValues(initialValues);
   };
 
+  const handleToggle = (type: 'despesa' | 'receita') => {
+    setSelected(type);
+    resetForm(); // Limpa o formulário ao trocar de tipo
+  };
+
   const formatarData = (data: string): string => {
     const partes = data.split('-');
     return `${partes[2]}-${partes[1]}-${partes[0]}`; // Formato DD-MM-YYYY
@@ -48,7 +53,7 @@ export default function CadastroDespesasReceitas() {
               styles.leftButton,
               selected === 'despesa' ? styles.selectedButton : styles.unselectedButton,
             ]}
-            onPress={() => setSelected('despesa')}
+            onPress={() => handleToggle('despesa')} // Usando a função handleToggle
           >
             <Text style={styles.text}>Despesa</Text>
           </TouchableOpacity>
@@ -59,7 +64,7 @@ export default function CadastroDespesasReceitas() {
               styles.rightButton,
               selected === 'receita' ? styles.selectedButton : styles.unselectedButton,
             ]}
-            onPress={() => setSelected('receita')}
+            onPress={() => handleToggle('receita')} // Usando a função handleToggle
           >
             <Text style={styles.text}>Receita</Text>
           </TouchableOpacity>

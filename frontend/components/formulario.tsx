@@ -56,7 +56,6 @@ export default function Formulario(props: PropsFormulario) {
     return Object.values(emptyFields).every((isEmpty) => !isEmpty);
   };
 
-  // Alterado para DD-MM-YYYY
   const formatDate = (date: Date): string => {
     const day = String(date.getDate()).padStart(2, '0');
     const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -75,6 +74,15 @@ export default function Formulario(props: PropsFormulario) {
   const getDateValue = (): Date => {
     const dateValue = values['Data'];
     return dateValue ? new Date(dateValue.split('-').reverse().join('-')) : new Date();
+  };
+
+  const handleInputChange = (field: string, text: string) => {
+    onInputChange && onInputChange(field, text);
+    // Atualiza o estado isEmpty para remover a mensagem de erro se o campo não estiver vazio
+    setIsEmpty((prev) => ({
+      ...prev,
+      [field]: !text.trim(), // Se o campo estiver vazio, set isEmpty para true, caso contrário false
+    }));
   };
 
   return (
@@ -109,7 +117,12 @@ export default function Formulario(props: PropsFormulario) {
                 <Picker
                   selectedValue={values['Categoria']}
                   onValueChange={(itemValue) => {
-                    onInputChange && onInputChange('Categoria', itemValue); // Use itemValue diretamente
+                    onInputChange && onInputChange('Categoria', itemValue);
+                    // Atualiza o estado isEmpty para remover a mensagem de erro se a categoria for selecionada
+                    setIsEmpty((prev) => ({
+                      ...prev,
+                      Categoria: itemValue === '', // Se não tiver categoria selecionada, manter mensagem de erro
+                    }));
                   }}
                   style={styles.input}
                 >
@@ -126,7 +139,7 @@ export default function Formulario(props: PropsFormulario) {
               style={styles.input}
               placeholder={`Digite ${field}`}
               value={values[field]}
-              onChangeText={(text) => onInputChange && onInputChange(field, text)}
+              onChangeText={(text) => handleInputChange(field, text)} // Use a nova função handleInputChange
               returnKeyType={index < fields.length - 1 ? 'next' : 'done'}
             />
           )}
@@ -134,15 +147,14 @@ export default function Formulario(props: PropsFormulario) {
         </View>
       ))}
 
-    <BtnSalvar
-      nome={btn.nome}
-      tipoSucesso={btn.tipoSucesso}
-      onReset={onReset}
-      rota={btn.rota}
-      formValues={values}
-      onPress={validateFields}
-    />
-
+      <BtnSalvar
+        nome={btn.nome}
+        tipoSucesso={btn.tipoSucesso}
+        onReset={onReset}
+        rota={btn.rota}
+        formValues={values}
+        onPress={validateFields}
+      />
     </KeyboardAwareScrollView>
   );
 }
