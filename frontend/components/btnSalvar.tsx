@@ -10,6 +10,7 @@ interface Props {
   onReset?: () => void;
   rota: string;
   formValues: any;
+  onPress?: () => boolean; // Função de validação deve retornar um booleano
 }
 
 export default function BtnSalvar(props: Props) {
@@ -21,7 +22,7 @@ export default function BtnSalvar(props: Props) {
       nome: props.formValues.Nome,
       categoriaId: props.formValues.Categoria,
       valor: props.formValues.Valor,
-      data: props.formValues.Data, // Aqui estamos utilizando a data já formatada no formato DD-MM-YYYY
+      data: props.formValues.Data, // Data formatada
       descricao: props.formValues.Descricao,
     };
     console.log('Dados a serem enviados:', dataToSend);
@@ -51,7 +52,22 @@ export default function BtnSalvar(props: Props) {
 
   return (
     <View>
-      <TouchableOpacity style={styles.btn} onPress={handleSubmit}>
+      <TouchableOpacity
+        style={styles.btn}
+        onPress={() => {
+          // Executa a validação antes de enviar
+          if (props.onPress) {
+            const isValid = props.onPress(); // Executa a função de validação passada como prop
+            if (isValid) {
+              handleSubmit(); // Se for válido, chama a função de envio
+            } else {
+              console.log('A validação falhou. Não enviar o formulário.');
+            }
+          } else {
+            handleSubmit(); // Caso não tenha onPress (validação), apenas envia
+          }
+        }}
+      >
         <View style={styles.btnContent}>
           <Text style={styles.btnText}>Salvar</Text>
         </View>

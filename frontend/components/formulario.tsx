@@ -13,6 +13,7 @@ interface PropsFormulario {
   values: { [key: string]: any };
   onInputChange?: (field: string, value: any) => void;
   onReset?: () => void;
+  errors?: { [key: string]: string };
   btn: { nome: string; tipoSucesso: string; rota: string; formValues: any };
 }
 
@@ -21,6 +22,7 @@ export default function Formulario(props: PropsFormulario) {
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [loadingCategorias, setLoadingCategorias] = useState(false);
   const inputRefs = useRef<{ [key: string]: any }>({});
+  const [isEmpty, setIsEmpty] = useState<{ [key: string]: boolean }>({});
 
   const { fields, values, onInputChange, onReset, btn } = props;
 
@@ -39,6 +41,20 @@ export default function Formulario(props: PropsFormulario) {
 
     fetchCategorias();
   }, []);
+
+  // Verifica se todos os campos foram preenchidos
+  const validateFields = () => {
+    const emptyFields = fields.reduce((acc, field) => {
+      if (!values[field]) {
+        acc[field] = true;
+      } else {
+        acc[field] = false;
+      }
+      return acc;
+    }, {} as { [key: string]: boolean });
+    setIsEmpty(emptyFields);
+    return Object.values(emptyFields).every((isEmpty) => !isEmpty);
+  };
 
   // Alterado para DD-MM-YYYY
   const formatDate = (date: Date): string => {
@@ -114,16 +130,19 @@ export default function Formulario(props: PropsFormulario) {
               returnKeyType={index < fields.length - 1 ? 'next' : 'done'}
             />
           )}
+          {isEmpty[field] && <Text style={styles.errorText}>Campo obrigatório</Text>}
         </View>
       ))}
 
-      <BtnSalvar
-        nome={btn.nome}
-        tipoSucesso={btn.tipoSucesso}
-        onReset={onReset}
-        rota={btn.rota}
-        formValues={values}
-      />
+    <BtnSalvar
+      nome={btn.nome}
+      tipoSucesso={btn.tipoSucesso}
+      onReset={onReset}
+      rota={btn.rota}
+      formValues={values}
+      onPress={validateFields}
+    />
+
     </KeyboardAwareScrollView>
   );
 }
@@ -154,5 +173,9 @@ const styles = StyleSheet.create({
   dateText: {
     color: '#000',
     fontSize: 16,
+  },
+  errorText: {
+    color: 'red',
+    marginTop: 5,
   },
 });
