@@ -10,6 +10,7 @@ import { API_URL } from '../../api';
 import Swal from 'sweetalert2';
 import ModalSucesso from '../../components/modalSucesso';
 import ModalConfirmacaoDelete from '../../components/modalConfirmacaoDelete';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function PainelCategorias() {
   const initialValues: Categoria[] = [];
@@ -23,17 +24,27 @@ export default function PainelCategorias() {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
 
   useEffect(() => {
-    const fetchCategorias = async () => {
-      try {
-        const response = await axios.get(`${API_URL}/categorias`);
-        const categoriaData = response.data.map((categoria: Categoria): Categoria => ({
-          id: categoria.id,
-          nome: categoria.nome,
-        }));
-        setCategorias(categoriaData);
-      } catch (error) {
-        console.error("Erro ao buscar categorias:", error);
-      }
+      const fetchCategorias = async () => {
+        try {
+            const response = await axios.get(`${API_URL}/categorias`);
+            const categoriasFirestore = response.data;
+
+            // Tenta recuperar categorias do AsyncStorage
+            const storedCategoriasJSON = await AsyncStorage.getItem('categorias');
+            const storedCategorias = storedCategoriasJSON ? JSON.parse(storedCategoriasJSON) : [];
+
+            // Se as categorias no Firestore forem diferentes das armazenadas ou se não houver registros
+            if (JSON.stringify(categoriasFirestore) !== JSON.stringify(storedCategorias) || storedCategorias.length === 0) {
+            // Atualiza o AsyncStorage e o estado
+            await AsyncStorage.setItem('categorias', JSON.stringify(categoriasFirestore));
+            setCategorias(categoriasFirestore);
+            } else {
+            // Se as categorias estiverem iguais, apenas as define do AsyncStorage
+            setCategorias(storedCategorias);
+            }
+        } catch (error) {
+            console.error("Erro ao buscar categorias:", error);
+        }
     };
     fetchCategorias();
   }, []);

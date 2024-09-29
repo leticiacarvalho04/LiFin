@@ -6,10 +6,11 @@ import BtnSalvar from './btnSalvar';
 import axios from 'axios';
 import { Categoria } from '../types/categoria';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_URL } from '../api';
 
 interface PropsFormulario {
-  fields: string[]; // Nomes dos campos
+  fields: string[];
   values: { [key: string]: any };
   onInputChange?: (field: string, value: any) => void;
   onReset?: () => void;
@@ -23,7 +24,7 @@ export default function Formulario(props: PropsFormulario) {
   const [loadingCategorias, setLoadingCategorias] = useState(false);
   const inputRefs = useRef<{ [key: string]: any }>({});
   const [isEmpty, setIsEmpty] = useState<{ [key: string]: boolean }>({});
-
+  
   const { fields, values, onInputChange, onReset, btn } = props;
 
   useEffect(() => {
@@ -31,7 +32,21 @@ export default function Formulario(props: PropsFormulario) {
       setLoadingCategorias(true);
       try {
         const response = await axios.get(`${API_URL}/categorias`);
-        setCategorias(response.data);
+        const categoriasFirestore = response.data;
+
+        // Tenta recuperar categorias do AsyncStorage
+        const storedCategoriasJSON = await AsyncStorage.getItem('categorias');
+        const storedCategorias = storedCategoriasJSON ? JSON.parse(storedCategoriasJSON) : [];
+
+        // Se as categorias no Firestore forem diferentes das armazenadas ou se não houver registros
+        if (JSON.stringify(categoriasFirestore) !== JSON.stringify(storedCategorias) || storedCategorias.length === 0) {
+          // Atualiza o AsyncStorage e o estado
+          await AsyncStorage.setItem('categorias', JSON.stringify(categoriasFirestore));
+          setCategorias(categoriasFirestore);
+        } else {
+          // Se as categorias estiverem iguais, apenas as define do AsyncStorage
+          setCategorias(storedCategorias);
+        }
       } catch (error) {
         console.error('Erro ao buscar categorias:', error);
       } finally {
@@ -42,14 +57,9 @@ export default function Formulario(props: PropsFormulario) {
     fetchCategorias();
   }, []);
 
-  // Verifica se todos os campos foram preenchidos
   const validateFields = () => {
     const emptyFields = fields.reduce((acc, field) => {
-      if (!values[field]) {
-        acc[field] = true;
-      } else {
-        acc[field] = false;
-      }
+      acc[field] = !values[field];
       return acc;
     }, {} as { [key: string]: boolean });
     setIsEmpty(emptyFields);
@@ -60,7 +70,7 @@ export default function Formulario(props: PropsFormulario) {
     const day = String(date.getDate()).padStart(2, '0');
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const year = date.getFullYear();
-    return `${day}-${month}-${year}`; // Alterado para usar hífen
+    return `${day}-${month}-${year}`;
   };
 
   const handleDateChange = (event: any, selectedDate: Date | undefined) => {
@@ -78,10 +88,9 @@ export default function Formulario(props: PropsFormulario) {
 
   const handleInputChange = (field: string, text: string) => {
     onInputChange && onInputChange(field, text);
-    // Atualiza o estado isEmpty para remover a mensagem de erro se o campo não estiver vazio
     setIsEmpty((prev) => ({
       ...prev,
-      [field]: !text.trim(), // Se o campo estiver vazio, set isEmpty para true, caso contrário false
+      [field]: !text.trim(),
     }));
   };
 
@@ -118,10 +127,9 @@ export default function Formulario(props: PropsFormulario) {
                   selectedValue={values['Categoria']}
                   onValueChange={(itemValue) => {
                     onInputChange && onInputChange('Categoria', itemValue);
-                    // Atualiza o estado isEmpty para remover a mensagem de erro se a categoria for selecionada
                     setIsEmpty((prev) => ({
                       ...prev,
-                      Categoria: itemValue === '', // Se não tiver categoria selecionada, manter mensagem de erro
+                      Categoria: itemValue === '',
                     }));
                   }}
                   style={styles.input}
@@ -139,7 +147,7 @@ export default function Formulario(props: PropsFormulario) {
               style={styles.input}
               placeholder={`Digite ${field}`}
               value={values[field]}
-              onChangeText={(text) => handleInputChange(field, text)} // Use a nova função handleInputChange
+              onChangeText={(text) => handleInputChange(field, text)}
               returnKeyType={index < fields.length - 1 ? 'next' : 'done'}
             />
           )}

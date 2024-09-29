@@ -50,7 +50,7 @@ export default function CadastroCategoria() {
                         </View>
                         <Formulario
                             values={formValues}
-                            fields={['Nome']}
+                            fields={['Nome', 'Data']} // Inclua 'Data' aqui se necessário
                             onInputChange={handleInputChange}
                             onReset={resetForm} // Passando a função de reset
                             btn={{ nome: 'Categoria', tipoSucesso: 'cadastrada', rota: 'cadastro/categoria', formValues }}
@@ -79,9 +79,9 @@ const styles = StyleSheet.create({
         marginTop: '8%',
     },
     tituloText: {
-        fontSize: 20, // Ajuste o tamanho da fonte conforme necessário
-        fontWeight: 'bold', // Adicionando negrito
-        color: '#000', // Cor do texto
+        fontSize: 20,
+        fontWeight: 'bold',
+        color: '#000',
     },
     text: {
         fontSize: 16,

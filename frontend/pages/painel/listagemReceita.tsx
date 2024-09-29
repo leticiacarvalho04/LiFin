@@ -11,6 +11,7 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { Picker } from "@react-native-picker/picker";
 import ModalSucesso from "../../components/modalSucesso";
 import ModalConfirmacaoDelete from "../../components/modalConfirmacaoDelete";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function ListagemReceitas() {
     const [painelValues, setPainelValues] = useState<Receitas[]>([]);
@@ -28,7 +29,21 @@ export default function ListagemReceitas() {
     const fetchCategorias = async () => {
         try {
             const response = await axios.get(`${API_URL}/categorias`);
-            setCategorias(response.data);
+            const categoriasFirestore = response.data;
+
+            // Tenta recuperar categorias do AsyncStorage
+            const storedCategoriasJSON = await AsyncStorage.getItem('categorias');
+            const storedCategorias = storedCategoriasJSON ? JSON.parse(storedCategoriasJSON) : [];
+
+            // Se as categorias no Firestore forem diferentes das armazenadas ou se não houver registros
+            if (JSON.stringify(categoriasFirestore) !== JSON.stringify(storedCategorias) || storedCategorias.length === 0) {
+            // Atualiza o AsyncStorage e o estado
+            await AsyncStorage.setItem('categorias', JSON.stringify(categoriasFirestore));
+            setCategorias(categoriasFirestore);
+            } else {
+            // Se as categorias estiverem iguais, apenas as define do AsyncStorage
+            setCategorias(storedCategorias);
+            }
         } catch (error) {
             console.error("Erro ao buscar categorias:", error);
         }
@@ -38,13 +53,27 @@ export default function ListagemReceitas() {
         const fetchReceitas = async () => {
             try {
                 const response = await axios.get(`${API_URL}/receitas`);
-                const receitasData = response.data.map((receita: Receitas): Receitas => {
-                    return {
-                        ...receita,
-                        data: receita.data ? receita.data.split('T')[0] : '', // Formatar a data para DD-MM-YYYY
-                    }
-                });
-                setPainelValues(receitasData);
+                const receitasFirestore = response.data;
+
+                // Tenta recuperar categorias do AsyncStorage
+                const storedReceitasJSON = await AsyncStorage.getItem('despesas');
+                const storedReceitas = storedReceitasJSON ? JSON.parse(storedReceitasJSON) : [];
+                
+                // Se as categorias no Firestore forem diferentes das armazenadas ou se não houver registros
+                if (JSON.stringify(receitasFirestore) !== JSON.stringify(storedReceitas) || storedReceitas.length === 0) {
+                    // Atualiza o AsyncStorage e o estado
+                    await AsyncStorage.setItem('categorias', JSON.stringify(receitasFirestore));
+                    const receitasData = response.data.map((receita: Receitas): Receitas => {
+                        return {
+                            ...receita,
+                            data: receita.data ? receita.data.split('T')[0] : '', // Formatar a data para DD-MM-YYYY
+                        }
+                    });
+                    setPainelValues(receitasData);
+                } else {
+                    // Se as categorias estiverem iguais, apenas as define do AsyncStorage
+                    setPainelValues(storedReceitas);
+                }
             } catch (error) {
                 console.error("Erro ao buscar receitas:", error);
             }

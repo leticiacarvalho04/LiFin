@@ -6,11 +6,11 @@ import { Categoria } from "../../types/categoria";
 import Dropdown from "../../components/dropdown";
 import { API_URL } from "../../api";
 import Icon from "react-native-vector-icons/MaterialIcons";
-import Swal from 'sweetalert2';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Picker } from '@react-native-picker/picker';
 import ModalSucesso from "../../components/modalSucesso";
 import ModalConfirmacaoDelete from "../../components/modalConfirmacaoDelete";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function ListagemDespesas() {
     const [painelValues, setPainelValues] = useState<Despesas[]>([]);
@@ -27,7 +27,21 @@ export default function ListagemDespesas() {
     const fetchCategorias = async () => {
         try {
             const response = await axios.get(`${API_URL}/categorias`);
-            setCategorias(response.data);
+            const categoriasFirestore = response.data;
+
+            // Tenta recuperar categorias do AsyncStorage
+            const storedCategoriasJSON = await AsyncStorage.getItem('categorias');
+            const storedCategorias = storedCategoriasJSON ? JSON.parse(storedCategoriasJSON) : [];
+
+            // Se as categorias no Firestore forem diferentes das armazenadas ou se não houver registros
+            if (JSON.stringify(categoriasFirestore) !== JSON.stringify(storedCategorias) || storedCategorias.length === 0) {
+            // Atualiza o AsyncStorage e o estado
+            await AsyncStorage.setItem('categorias', JSON.stringify(categoriasFirestore));
+            setCategorias(categoriasFirestore);
+            } else {
+            // Se as categorias estiverem iguais, apenas as define do AsyncStorage
+            setCategorias(storedCategorias);
+            }
         } catch (error) {
             console.error("Erro ao buscar categorias:", error);
         }
@@ -37,13 +51,26 @@ export default function ListagemDespesas() {
         const fetchDespesas = async () => {
             try {
                 const response = await axios.get(`${API_URL}/despesas`);
-                const despesasData = response.data.map((despesa: Despesas): Despesas => {
-                    return {
-                        ...despesa,
-                        data: despesa.data ? despesa.data.split("T")[0] : "" // Formatação da data
-                    };
-                });
-                setPainelValues(despesasData);
+                const despesasFirestore = response.data;
+
+                // Tenta recuperar categorias do AsyncStorage
+                const storedDespesasJSON = await AsyncStorage.getItem('despesas');
+                const storedDespesas = storedDespesasJSON ? JSON.parse(storedDespesasJSON) : [];
+                
+                // Se as categorias no Firestore forem diferentes das armazenadas ou se não houver registros
+                if (JSON.stringify(despesasFirestore) !== JSON.stringify(storedDespesas) || storedDespesas.length === 0) {
+                    // Atualiza o AsyncStorage e o estado
+                    await AsyncStorage.setItem('categorias', JSON.stringify(despesasFirestore));
+                    const despesasData = response.data.map((despesa: Despesas): Despesas => {
+                        return {
+                            ...despesa,
+                            data: despesa.data ? despesa.data.split("T")[0] : "" // Formatação da data
+                        };
+                    });
+                    setPainelValues(despesasData);
+                } else {
+                    setPainelValues(storedDespesas);
+                }
             } catch (error) {
                 console.error("Erro ao buscar despesas:", error);
             }

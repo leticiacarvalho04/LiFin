@@ -1,7 +1,7 @@
 // Layout.tsx
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
-import { Navbar } from '../components/navbar';
+import { Navbar } from './navbar';
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (

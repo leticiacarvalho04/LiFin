@@ -1,16 +1,16 @@
 import React, { useState } from 'react';
-import { View, TouchableOpacity, Text, Animated, Dimensions } from "react-native";
+import { View, TouchableOpacity, Text, Animated, Dimensions, StyleSheet, StatusBar } from "react-native";
 import { LinearGradient } from 'expo-linear-gradient';
 import Icon from 'react-native-vector-icons/Feather';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import styles from "./styles";
-import { RootStackParamList } from '../../routes';
+
+import { RootStackParamList } from '../routes';
 
 // Defina o tipo da navegação
 type NavbarProps = StackNavigationProp<RootStackParamList, keyof RootStackParamList>;
 
-const { width, height } = Dimensions.get('window');
+const { width, height } = Dimensions.get('screen'); // Obtém a altura total da tela, incluindo a área da barra de status
 
 export function Navbar() {
     const navigation = useNavigation<NavbarProps>();
@@ -87,3 +87,72 @@ export function Navbar() {
         </LinearGradient>
     );
 }
+
+const styles = StyleSheet.create({
+    navbar: {
+        height: 100,
+        justifyContent: 'center',
+        paddingHorizontal: 20,
+        borderBottomLeftRadius: 10,
+        borderBottomRightRadius: 10,
+        zIndex: 1,
+    },
+    menuContainer: {
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+        marginTop: 25,
+    },
+    menuIcon: {
+        display: 'flex',
+        justifyContent: 'center',
+        textAlign: 'center',
+        alignContent: 'center',
+        alignItems: 'center',
+        alignSelf: 'center',
+    },
+    sidebar: {
+        backgroundColor: '#f4f4f4',
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width: width * 0.65, // Sidebar cobrindo 65% da largura da tela
+        height: height, // Sidebar cobrindo 100% da altura da tela
+        padding: 20,
+        paddingTop: StatusBar.currentHeight || 20, // Espaço para a barra de status
+        zIndex: 2,
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        elevation: 5,
+    },
+    closeButton: {
+        top: 20,
+        alignSelf: 'flex-start',
+        marginBottom: 20, 
+        marginTop: 10, 
+    },
+    optionButton: {
+        paddingVertical: 5,
+        paddingHorizontal: 15,
+        marginVertical: 5,
+        borderRadius: 8,
+    },
+    linhas: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        width: '100%',
+    },
+    optionEmoji: {
+        fontSize: 24, // Ajuste o tamanho do emoji conforme necessário
+        marginRight: 10,
+    },
+    optionText: {
+        fontSize: 16,
+        color: '#333',
+        paddingVertical: 10,
+    },
+});
