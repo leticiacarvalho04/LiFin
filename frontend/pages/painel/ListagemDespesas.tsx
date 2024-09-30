@@ -1,16 +1,16 @@
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native"; 
+import { StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import Despesas from "../../types/despesas";
 import { Categoria } from "../../types/categoria";
 import Dropdown from "../../components/dropdown";
 import { API_URL } from "../../api";
-import Icon from "react-native-vector-icons/MaterialIcons";
-import DateTimePicker from '@react-native-community/datetimepicker';
-import { Picker } from '@react-native-picker/picker';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { Picker } from "@react-native-picker/picker";
+import Icon from "react-native-vector-icons/Feather";
 import ModalSucesso from "../../components/modalSucesso";
 import ModalConfirmacaoDelete from "../../components/modalConfirmacaoDelete";
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function ListagemDespesas() {
     const [painelValues, setPainelValues] = useState<Despesas[]>([]);
@@ -18,29 +18,25 @@ export default function ListagemDespesas() {
     const [isEditing, setIsEditing] = useState<number | null>(null);
     const [editedDespesa, setEditedDespesa] = useState<Despesas | null>(null);
     const [showDatePicker, setShowDatePicker] = useState(false);
-    const [date, setDate] = useState(new Date()); 
-    const [modalVisible, setModalVisible] = useState(false); // Modal de sucesso
+    const [date, setDate] = useState(new Date());
+    const [modalVisible, setModalVisible] = useState(false);
     const [modalMessage, setModalMessage] = useState({ nome: '', tipoSucesso: '' });
-    const [confirmDeleteVisible, setConfirmDeleteVisible] = useState(false); // Modal de confirmação de exclusão
-    const [despesaToDelete, setDespesaToDelete] = useState<Despesas | null>(null); 
+    const [confirmDeleteVisible, setConfirmDeleteVisible] = useState(false);
+    const [despesaToDelete, setDespesaToDelete] = useState<Despesas | null>(null);
 
     const fetchCategorias = async () => {
         try {
             const response = await axios.get(`${API_URL}/categorias`);
             const categoriasFirestore = response.data;
 
-            // Tenta recuperar categorias do AsyncStorage
             const storedCategoriasJSON = await AsyncStorage.getItem('categorias');
             const storedCategorias = storedCategoriasJSON ? JSON.parse(storedCategoriasJSON) : [];
 
-            // Se as categorias no Firestore forem diferentes das armazenadas ou se não houver registros
             if (JSON.stringify(categoriasFirestore) !== JSON.stringify(storedCategorias) || storedCategorias.length === 0) {
-            // Atualiza o AsyncStorage e o estado
-            await AsyncStorage.setItem('categorias', JSON.stringify(categoriasFirestore));
-            setCategorias(categoriasFirestore);
+                await AsyncStorage.setItem('categorias', JSON.stringify(categoriasFirestore));
+                setCategorias(categoriasFirestore);
             } else {
-            // Se as categorias estiverem iguais, apenas as define do AsyncStorage
-            setCategorias(storedCategorias);
+                setCategorias(storedCategorias);
             }
         } catch (error) {
             console.error("Erro ao buscar categorias:", error);
@@ -53,20 +49,15 @@ export default function ListagemDespesas() {
                 const response = await axios.get(`${API_URL}/despesas`);
                 const despesasFirestore = response.data;
 
-                // Tenta recuperar categorias do AsyncStorage
                 const storedDespesasJSON = await AsyncStorage.getItem('despesas');
                 const storedDespesas = storedDespesasJSON ? JSON.parse(storedDespesasJSON) : [];
-                
-                // Se as categorias no Firestore forem diferentes das armazenadas ou se não houver registros
+
                 if (JSON.stringify(despesasFirestore) !== JSON.stringify(storedDespesas) || storedDespesas.length === 0) {
-                    // Atualiza o AsyncStorage e o estado
-                    await AsyncStorage.setItem('categorias', JSON.stringify(despesasFirestore));
-                    const despesasData = response.data.map((despesa: Despesas): Despesas => {
-                        return {
-                            ...despesa,
-                            data: despesa.data ? despesa.data.split("T")[0] : "" // Formatação da data
-                        };
-                    });
+                    await AsyncStorage.setItem('despesas', JSON.stringify(despesasFirestore));
+                    const despesasData = response.data.map((despesa: Despesas): Despesas => ({
+                        ...despesa,
+                        data: despesa.data ? despesa.data.split("T")[0].split('-').reverse().join('-') : ""
+                    }));
                     setPainelValues(despesasData);
                 } else {
                     setPainelValues(storedDespesas);
@@ -80,39 +71,15 @@ export default function ListagemDespesas() {
         fetchDespesas();
     }, []);
 
-    const formatarData = (dataString: string): string => {
-        const [dia, mes, ano] = dataString.split('-'); 
-        const meses = [
-            "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
-            "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
-        ];
-        
-        const mesNome = meses[parseInt(mes, 10) - 1]; 
-        return `${dia} de ${mesNome} de ${ano}`;
-    };
-
-    const getCategoriaNome = (categoriaId: string) => {
-        const categoria = categorias.find((cat) => cat.id === categoriaId);
-        return categoria ? categoria.nome : "Categoria desconhecida";
-    };
-
-    const formatDate = (date: Date): string => {
-        const day = String(date.getDate()).padStart(2, '0');
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const year = date.getFullYear();
-        return `${day}-${month}-${year}`;
-    };
-
     const handleEdit = (index: number) => {
         setIsEditing(isEditing === index ? null : index);
         setEditedDespesa(painelValues[index]);
-    
         if (painelValues[index].data) {
-            const dateParts = painelValues[index].data.split('-'); 
-            const day = parseInt(dateParts[0], 10);
-            const month = parseInt(dateParts[1], 10) - 1; 
+            const dateParts = painelValues[index].data.split('-');
             const year = parseInt(dateParts[2], 10);
-            setDate(new Date(day, month, year)); 
+            const month = parseInt(dateParts[1], 10) - 1;
+            const day = parseInt(dateParts[0], 10);
+            setDate(new Date(year, month, day));
         }
     };
 
@@ -122,11 +89,28 @@ export default function ListagemDespesas() {
         }
     };
 
+    const formatarData = (dataString: string): string => {
+        const [dia, mes, ano] = dataString.split('-');
+        const meses = [
+            "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+            "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+        ];
+        const mesNome = meses[parseInt(mes, 10) - 1];
+        return `${dia} de ${mesNome} de ${ano}`;
+    };
+
+    const formatDateToSave = (date: Date): string => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    };
+
     const handleDateChange = (event: any, selectedDate?: Date) => {
         if (event.type === 'set' && selectedDate) {
             setDate(selectedDate);
             if (editedDespesa) {
-                const formattedDate = formatDate(selectedDate);
+                const formattedDate = formatDateToSave(selectedDate);
                 setEditedDespesa({ ...editedDespesa, data: formattedDate });
             }
         }
@@ -143,8 +127,6 @@ export default function ListagemDespesas() {
                 setPainelValues(updatedPainelValues);
                 setIsEditing(null);
                 setEditedDespesa(null);
-
-                // Exibir modal de sucesso após edição
                 setModalMessage({ nome: 'Despesa', tipoSucesso: 'editada' });
                 setModalVisible(true);
             } catch (error) {
@@ -153,146 +135,160 @@ export default function ListagemDespesas() {
         }
     };
 
-    const formatDateToSave = (date: Date): string => {
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`; 
-    };
-
-    const handleDelete = (despesa: Despesas) => {
-        setDespesaToDelete(despesa); 
-        setConfirmDeleteVisible(true);
-    };
-
     const confirmDelete = async () => {
         if (despesaToDelete) {
             try {
                 await axios.delete(`${API_URL}/excluir/despesa/${despesaToDelete.id}`);
                 setPainelValues(prev => prev.filter(despesa => despesa.id !== despesaToDelete.id));
                 setModalMessage({ nome: 'Despesa', tipoSucesso: 'excluída' });
-                setModalVisible(true); 
+                setModalVisible(true);
             } catch (error) {
                 console.error("Erro ao deletar despesa:", error);
             } finally {
-                setConfirmDeleteVisible(false); 
+                setConfirmDeleteVisible(false);
                 setDespesaToDelete(null);
             }
         }
     };
 
     const handleCloseModal = () => {
-        setModalVisible(false); 
+        setModalVisible(false);
     };
 
     const handleCloseConfirmModal = () => {
         setConfirmDeleteVisible(false);
     };
 
+    const handleDelete = (despesa: Despesas) => {
+        setDespesaToDelete(despesa);
+        setConfirmDeleteVisible(true);
+    };
+
+    const getCategoriaNome = (categoriaId: string) => {
+        const categoria = categorias.find((cat) => cat.id === categoriaId);
+        return categoria ? categoria.nome : "Categoria desconhecida";
+    };
+
+    const agruparDespesasPorMesEAno = (despesas: Despesas[]) => {
+        const despesasAgrupadas: { [key: string]: Despesas[] } = {};
+
+        despesas.forEach(despesa => {
+            const [dia, mes, ano] = despesa.data.split('-');
+            const meses = [
+                "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+                "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+            ];
+
+            const mesNome = meses[parseInt(mes, 10) - 1];
+            const chaveMesAno = `${mesNome} de ${ano}`;
+
+            if (!despesasAgrupadas[chaveMesAno]) {
+                despesasAgrupadas[chaveMesAno] = [];
+            }
+            despesasAgrupadas[chaveMesAno].push(despesa);
+        });
+
+        for (const mesAno in despesasAgrupadas) {
+            despesasAgrupadas[mesAno] = despesasAgrupadas[mesAno].sort((a, b) => {
+                return new Date(a.data).getTime() - new Date(b.data).getTime();
+            });
+        }
+
+        return despesasAgrupadas;
+    };
+
+    const despesasAgrupadas = agruparDespesasPorMesEAno(painelValues);
+
     return (
         <View style={styles.container}>
-            {painelValues.map((despesa: Despesas, index: number) => (
-                <View key={index}>
-                    <Dropdown 
-                        title={despesa.nome} 
-                        date={formatarData(despesa.data)} 
-                        value={despesa.valor.toString()} 
-                        valueColor="#d32f2f" 
-                    >
-                        {isEditing === index ? (
-                            <View style={styles.content}>
-                                <Text>Nome</Text>
-                                <TextInput
-                                    style={styles.input}
-                                    value={editedDespesa?.nome}
-                                    onChangeText={(text) => handleInputChange('nome', text)}
-                                    placeholder="Nome"
-                                />
-                                <Text>Valor</Text>
-                                <TextInput
-                                    style={styles.input}
-                                    value={editedDespesa?.valor.toString()}
-                                    onChangeText={(text) => handleInputChange('valor', text)}
-                                    placeholder="Valor"
-                                    keyboardType="numeric"
-                                />
-                                <Text>Descrição</Text>
-                                <TextInput
-                                    style={styles.input}
-                                    value={editedDespesa?.descricao}
-                                    onChangeText={(text) => handleInputChange('descricao', text)}
-                                    placeholder="Descrição"
-                                />
-                                <Text>Data</Text>
-                                <TouchableOpacity onPress={() => setShowDatePicker(true)} style={styles.input}>
-                                    <Text>{editedDespesa?.data}</Text>
-                                </TouchableOpacity>
-                                {showDatePicker && (
-                                    <DateTimePicker
-                                        mode="date"
-                                        value={date} 
-                                        onChange={handleDateChange}
-                                        display="default"
+            {Object.keys(despesasAgrupadas).map((mesAno) => (
+                <View key={mesAno}>
+                    <Text style={styles.mesAno}>{mesAno}</Text>
+                    {despesasAgrupadas[mesAno].map((despesa, index) => (
+                        <Dropdown key={despesa.id} title={despesa.nome} date={formatarData(despesa.data)} value={despesa.valor.toString()} valueColor="#d32f2f">
+                            {isEditing === index ? (
+                                <View>
+                                    <Text>Nome</Text>
+                                    <TextInput
+                                        style={styles.input}
+                                        value={editedDespesa ? editedDespesa.nome : ''}
+                                        onChangeText={(value) => handleInputChange("nome", value)}
                                     />
-                                )}
-                                <Text>Categoria</Text>
-                                <Picker
-                                    selectedValue={editedDespesa?.categoriaId}
-                                    onValueChange={(itemValue) => handleInputChange('categoriaId', itemValue)}
-                                    style={styles.input}
-                                >
-                                    <Picker.Item label="Selecione uma categoria" value="" />
-                                    {categorias.map((categoria) => (
-                                        <Picker.Item key={categoria.id} label={categoria.nome} value={categoria.id} />
-                                    ))}
-                                </Picker>
-                                <View style={styles.botoes}>
-                                    <TouchableOpacity onPress={() => handleSave(index)} style={styles.saveButton}>
-                                        <Text style={styles.saveButtonText}>Salvar</Text>
+                                    <Text>Valor</Text>
+                                    <TextInput
+                                        style={styles.input}
+                                        value={editedDespesa ? editedDespesa.valor.toString() : ''}
+                                        onChangeText={(value) => handleInputChange("valor", value)}
+                                    />
+                                    <Text>Data</Text>
+                                    <TouchableOpacity onPress={() => setShowDatePicker(true)} style={styles.input}>
+                                        <Text>{editedDespesa ? formatarData(editedDespesa.data) : ''}</Text>
                                     </TouchableOpacity>
-                                    <TouchableOpacity onPress={() => setIsEditing(null)} style={styles.cancelButton}>
-                                        <Text style={styles.cancelButtonText}>Cancelar</Text>
-                                    </TouchableOpacity>
-                                </View>
-                            </View>
-                        ) : (
-                            <View>
-                                <Text>Nome: {despesa.nome}</Text>
-                                <Text>Valor: {despesa.valor}</Text>
-                                <Text>Data: {formatarData(despesa.data)}</Text>
-                                <Text>Categoria: {getCategoriaNome(despesa.categoriaId)}</Text>
-                                <Text>Descrição: {despesa.descricao}</Text>
-                                <View style={styles.botoes}>
-                                    <View style={styles.btn}>
-                                        <TouchableOpacity onPress={() => handleEdit(index)} style={styles.editButton}>
-                                            <Icon name='edit' size={24} color="#000" />
-                                            <Text>Editar</Text>
+                                    {showDatePicker && (
+                                        <DateTimePicker
+                                            value={date}
+                                            mode="date"
+                                            display="default"
+                                            onChange={handleDateChange}
+                                        />
+                                    )}
+                                    <Text>Categoria</Text>
+                                    <Picker
+                                        selectedValue={editedDespesa ? editedDespesa.categoriaId : ''}
+                                        onValueChange={(itemValue) => handleInputChange("categoriaId", itemValue)}
+                                        style={styles.input}
+                                    >
+                                        <Picker.Item label="Selecione uma categoria" value="" />
+                                        {categorias.map((categoria) => (
+                                            <Picker.Item key={categoria.id} label={categoria.nome} value={categoria.id} />
+                                        ))}
+                                    </Picker>
+                                    <View style={styles.botoes}>
+                                        <TouchableOpacity onPress={() => handleSave(index)} style={styles.saveButton}>
+                                            <Text style={styles.saveButtonText}>Salvar</Text>
                                         </TouchableOpacity>
-                                        <TouchableOpacity onPress={() => handleDelete(despesa)} style={styles.deleteButton}>
-                                            <Icon name='delete' size={24} color="#000" />
-                                            <Text>Deletar</Text>
+                                        <TouchableOpacity onPress={() => setIsEditing(null)} style={styles.cancelButton}>
+                                            <Text style={styles.cancelButtonText}>Cancelar</Text>
                                         </TouchableOpacity>
                                     </View>
                                 </View>
-                            </View>
-                        )}
-                    </Dropdown>
+                            ) : (
+                                <View>
+                                    <Text>Nome: {despesa.nome}</Text>
+                                    <Text>Valor: {despesa.valor}</Text>
+                                    <Text>Data: {formatarData(despesa.data)}</Text>
+                                    <Text>Categoria: {getCategoriaNome(despesa.categoriaId)}</Text>
+                                    <Text>Descrição: {despesa.descricao}</Text>
+                                    <View style={styles.botoes}>
+                                        <View style={styles.btn}>
+                                            <TouchableOpacity onPress={() => handleEdit(index)} style={styles.editButton}>
+                                                <Icon name='edit' size={24} color="#000" />
+                                                <Text>Editar</Text>
+                                            </TouchableOpacity>
+                                            <TouchableOpacity onPress={() => handleDelete(despesa)} style={styles.deleteButton}>
+                                                <Icon name='trash' size={24} color="#000" />
+                                                <Text>Deletar</Text>
+                                            </TouchableOpacity>
+                                        </View>
+                                    </View>
+                                </View>
+                            )}
+                        </Dropdown>
+                    ))}
                 </View>
             ))}
-
-            <ModalSucesso 
-                nome="Despesa"
-                visible={modalVisible} 
-                tipoSucesso={`A ${modalMessage.nome} foi ${modalMessage.tipoSucesso} com sucesso!`} 
-                onClose={handleCloseModal} 
+            <ModalSucesso
+                visible={modalVisible}
+                onClose={handleCloseModal}
+                nome={`${modalMessage.nome}`}
+                tipoSucesso="editada"
             />
-            <ModalConfirmacaoDelete 
-                visible={confirmDeleteVisible} 
-                onClose={handleCloseConfirmModal} 
-                onConfirm={confirmDelete} 
-                nome={despesaToDelete ? despesaToDelete.nome : ''} 
+            <ModalConfirmacaoDelete
+                visible={confirmDeleteVisible}
+                onClose={handleCloseConfirmModal}
+                onConfirm={confirmDelete}
+                nome={'Despesa'}
             />
-
         </View>
     );
 }
@@ -304,6 +300,11 @@ const styles = StyleSheet.create({
     },
     content: {
         width: '100%',
+    },
+    mesAno: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        marginVertical: 10,
     },
     botoes: {
         flexDirection: 'row',
