@@ -16,7 +16,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 export default function ListagemReceitas() {
     const [painelValues, setPainelValues] = useState<Receitas[]>([]);
     const [categorias, setCategorias] = useState<Categoria[]>([]);
-    const [isEditing, setIsEditing] = useState<number | null>(null); // Alterei para armazenar o índice da despesa em edição
+    const [isEditing, setIsEditing] = useState<number | null>(null); // Alterei para armazenar o índice da receita em edição
     const [editedReceita, setEditedReceita] = useState<Receitas | null>(null); // Estado para armazenar a despesa em edição
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [date, setDate] = useState(new Date());
@@ -66,7 +66,7 @@ export default function ListagemReceitas() {
                     const receitasData = response.data.map((receita: Receitas): Receitas => {
                         return {
                             ...receita,
-                            data: receita.data ? receita.data.split('T')[0] : '', // Formatar a data para DD-MM-YYYY
+                            data: receita.data.split("T")[0]
                         }
                     });
                     setPainelValues(receitasData);
@@ -84,26 +84,36 @@ export default function ListagemReceitas() {
     }, []);
 
     const formatarData = (dataString: string): string => {
-        const [dia, mes, ano] = dataString.split('-'); 
+        const [dia, mes, ano] = dataString.split('-');
         const meses = [
             "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
             "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
         ];
-        
-        const mesNome = meses[parseInt(mes, 10) - 1]; 
+        const mesNome = meses[parseInt(mes, 10) - 1];
         return `${dia} de ${mesNome} de ${ano}`;
+    };
+
+    const formatDateToSave = (date: Date): string => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    };
+
+    const handleDateChange = (event: any, selectedDate?: Date) => {
+        if (event.type === 'set' && selectedDate) {
+            setDate(selectedDate);
+            if (editedReceita) {
+                const formattedDate = formatDateToSave(selectedDate);
+                setEditedReceita({ ...editedReceita, data: formattedDate });
+            }
+        }
+        setShowDatePicker(false);
     };
 
     const getCategoriaNome = (categoriaId: string) => {
         const categoria = categorias.find((cat) => cat.id === categoriaId);
         return categoria ? categoria.nome : "Categoria desconhecida";
-    };
-
-    const formatDate = (date: Date): string => {
-        const day = String(date.getDate()).padStart(2, '0');
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const year = date.getFullYear();
-        return `${day}-${month}-${year}`;
     };
 
     const handleEdit = (index: number) => {
@@ -125,17 +135,6 @@ export default function ListagemReceitas() {
         }
     };
 
-    const handleDateChange = (event: any, selectedDate?: Date) => {
-        if (event.type === 'set' && selectedDate) {
-            setDate(selectedDate);
-            if (editedReceita) {
-                const formattedDate = formatDate(selectedDate);
-                setEditedReceita({ ...editedReceita, data: formattedDate });
-            }
-        }
-        setShowDatePicker(false);
-    };
-
     const handleSave = async (index: number) => {
         if (editedReceita) {
             try {
@@ -153,13 +152,6 @@ export default function ListagemReceitas() {
                 console.error("Erro ao salvar receita:", error);
             }
         }
-    };
-
-    const formatDateToSave = (date: Date): string => {
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`; 
     };
 
     const handleCancel = (receita: Receitas) => {
@@ -196,92 +188,115 @@ export default function ListagemReceitas() {
         setConfirmDeleteVisible(false);
     };
 
+    const agruparReceitasPorMesEAno = (receitas: Receitas[]) => {
+        const receitasAgrupadas: { [key: string]: Receitas[] } = {};
+
+        receitas.forEach(despesa => {
+            const [dia, mes, ano] = despesa.data.split('-');
+            const meses = [
+                "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+                "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+            ];
+
+            const mesNome = meses[parseInt(mes, 10) - 1];
+            const chaveMesAno = `${mesNome} de ${ano}`;
+
+            if (!receitasAgrupadas[chaveMesAno]) {
+                receitasAgrupadas[chaveMesAno] = [];
+            }
+            receitasAgrupadas[chaveMesAno].push(despesa);
+        });
+
+        for (const mesAno in receitasAgrupadas) {
+            receitasAgrupadas[mesAno] = receitasAgrupadas[mesAno].sort((a, b) => {
+                return new Date(a.data).getTime() - new Date(b.data).getTime();
+            });
+        }
+
+        return receitasAgrupadas;
+    };
+
+    const receitasAgrupadas = agruparReceitasPorMesEAno(painelValues);
+
+
     return (
         <View style={styles.container}>
-            {painelValues.map((receita: Receitas, index: number) => (
-                <Dropdown 
-                    key={index} 
-                    title={receita.nome} 
-                    date={receita.data} 
-                    value={receita.valor} 
-                    valueColor="#2e7d32"  
-                >
-                    {isEditing === index ? (
-                            <View style={styles.content}>
-                                <Text>Nome</Text>
-                                <TextInput
-                                    style={styles.input}
-                                    value={editedReceita?.nome}
-                                    onChangeText={(text) => handleInputChange('nome', text)}
-                                />
-                                <Text>Valor</Text>
-                                <TextInput
-                                    style={styles.input}
-                                    value={editedReceita?.valor.toString()}
-                                    onChangeText={(text) => handleInputChange('valor', text)}
-                                />
-                                <Text>Descrição</Text>
-                                <TextInput
-                                    style={styles.input}
-                                    value={editedReceita?.descricao}
-                                    onChangeText={(text) => handleInputChange('descricao', text)}
-                                />
-                                <Text>Data</Text>
-                                <TouchableOpacity onPress={() => setShowDatePicker(true)} style={styles.input}>
-                                    <Text>{editedReceita?.data}</Text>
-                                </TouchableOpacity>
-                                {showDatePicker && (
-                                    <DateTimePicker
-                                        mode="date"
-                                        value={date} 
-                                        onChange={handleDateChange}
-                                        display="default"
+            {Object.keys(receitasAgrupadas).map((mesAno) => (
+                <View key={mesAno}>
+                    <Text style={styles.mesAno}>{mesAno}</Text>
+                    {receitasAgrupadas[mesAno].map((receita, index) => (
+                        <Dropdown key={receita.id} title={receita.nome} date={formatarData(receita.data)} value={receita.valor.toString()} valueColor="#2e7d32">
+                            {isEditing === index ? (
+                                <View>
+                                    <Text>Nome</Text>
+                                    <TextInput
+                                        style={styles.input}
+                                        value={editedReceita ? editedReceita.nome : ''}
+                                        onChangeText={(value) => handleInputChange("nome", value)}
                                     />
-                                )}
-                                <Text>Categoria</Text>
-                                <Picker
-                                    selectedValue={editedReceita?.categoriaId}
-                                    onValueChange={(itemValue) => handleInputChange('categoriaId', itemValue)}
-                                    style={styles.input}
-                                >
-                                    <Picker.Item label="Selecione uma categoria" value="" />
-                                    {categorias.map((categoria) => (
-                                        <Picker.Item key={categoria.id} label={categoria.nome} value={categoria.id} />
-                                    ))}
-                                </Picker>
-                                <View style={styles.botoes}>
-                                    <TouchableOpacity onPress={() => handleSave(index)} style={styles.saveButton}>
-                                        <Text style={styles.saveButtonText}>Salvar</Text>
+                                    <Text>Valor</Text>
+                                    <TextInput
+                                        style={styles.input}
+                                        value={editedReceita ? editedReceita.valor.toString() : ''}
+                                        onChangeText={(value) => handleInputChange("valor", value)}
+                                    />
+                                    <Text>Data</Text>
+                                    <TouchableOpacity onPress={() => setShowDatePicker(true)} style={styles.input}>
+                                        <Text>{editedReceita ? formatarData(editedReceita.data) : ''}</Text>
                                     </TouchableOpacity>
-                                    <TouchableOpacity onPress={() => setIsEditing(null)} style={styles.cancelButton}>
-                                        <Text style={styles.cancelButtonText}>Cancelar</Text>
-                                    </TouchableOpacity>
-                                </View>
-                            </View>
-                        ) : (
-                            <View>
-                                <Text>Nome: {receita.nome}</Text>
-                                <Text>Valor: {receita.valor}</Text>
-                                <Text>Data: {receita.data}</Text>
-                                <Text>Categoria: {getCategoriaNome(receita.categoriaId)}</Text>
-                                <Text>Descrição: {receita.descricao}</Text>
-                                <View style={styles.botoes}>
-                                    <View style={styles.btn}>
-                                        <TouchableOpacity onPress={() => handleEdit(index)} style={styles.editButton}>
-                                            <Icon name='edit' size={24} color="#000" />
-                                            <Text>Editar</Text>
+                                    {showDatePicker && (
+                                        <DateTimePicker
+                                            value={date}
+                                            mode="date"
+                                            display="default"
+                                            onChange={handleDateChange}
+                                        />
+                                    )}
+                                    <Text>Categoria</Text>
+                                    <Picker
+                                        selectedValue={editedReceita ? editedReceita.categoriaId : ''}
+                                        onValueChange={(itemValue) => handleInputChange("categoriaId", itemValue)}
+                                        style={styles.input}
+                                    >
+                                        <Picker.Item label="Selecione uma categoria" value="" />
+                                        {categorias.map((categoria) => (
+                                            <Picker.Item key={categoria.id} label={categoria.nome} value={categoria.id} />
+                                        ))}
+                                    </Picker>
+                                    <View style={styles.botoes}>
+                                        <TouchableOpacity onPress={() => handleSave(index)} style={styles.saveButton}>
+                                            <Text style={styles.saveButtonText}>Salvar</Text>
                                         </TouchableOpacity>
-                                        <TouchableOpacity onPress={() => handleDelete(receita)} style={styles.deleteButton}>
-                                            <Icon name='delete' size={24} color="#000" />
-                                            <Text>Deletar</Text>
+                                        <TouchableOpacity onPress={() => setIsEditing(null)} style={styles.cancelButton}>
+                                            <Text style={styles.cancelButtonText}>Cancelar</Text>
                                         </TouchableOpacity>
                                     </View>
                                 </View>
-                            </View>
-                        )}
-                </Dropdown>
+                            ) : (
+                                <View>
+                                    <Text>Nome: {receita.nome}</Text>
+                                    <Text>Valor: {receita.valor}</Text>
+                                    <Text>Data: {formatarData(receita.data)}</Text>
+                                    <Text>Categoria: {getCategoriaNome(receita.categoriaId)}</Text>
+                                    <Text>Descrição: {receita.descricao}</Text>
+                                    <View style={styles.botoes}>
+                                        <View style={styles.btn}>
+                                            <TouchableOpacity onPress={() => handleEdit(index)} style={styles.editButton}>
+                                                <Icon name='edit' size={24} color="#000" />
+                                                <Text>Editar</Text>
+                                            </TouchableOpacity>
+                                            <TouchableOpacity onPress={() => handleDelete(receita)} style={styles.deleteButton}>
+                                                <Icon name='trash' size={24} color="#000" />
+                                                <Text>Deletar</Text>
+                                            </TouchableOpacity>
+                                        </View>
+                                    </View>
+                                </View>
+                            )}
+                        </Dropdown>
+                    ))}
+                </View>
             ))}
-
             <ModalSucesso 
                 nome="Receita"
                 visible={modalVisible} 
@@ -305,6 +320,11 @@ const styles = StyleSheet.create({
     },
     content: {
         width: '100%',
+    },
+    mesAno: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        marginVertical: 10,
     },
     botoes: {
         flexDirection: 'row',
