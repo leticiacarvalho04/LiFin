@@ -57,7 +57,7 @@ export default function ListagemDespesas() {
                     const despesasData = response.data.map((despesa: Despesas): Despesas => ({
                         ...despesa,
                         data: despesa.data ? despesa.data.split("T")[0].split('-').reverse().join('-') : ""
-                    }));
+                    }));                    
                     setPainelValues(despesasData);
                 } else {
                     setPainelValues(storedDespesas);
@@ -90,14 +90,14 @@ export default function ListagemDespesas() {
     };
 
     const formatarData = (dataString: string): string => {
-        const [dia, mes, ano] = dataString.split('-');
+        if (!dataString) return "";
+        const [ano, mes, dia] = dataString.split('-'); // A ordem é YYYY-MM-DD
         const meses = [
             "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
             "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
         ];
-        const mesNome = meses[parseInt(mes, 10) - 1];
-        return `${dia} de ${mesNome} de ${ano}`;
-    };
+        return `${dia} de ${meses[parseInt(mes, 10) - 1]} de ${ano}`;
+    };    
 
     const formatDateToSave = (date: Date): string => {
         const year = date.getFullYear();
