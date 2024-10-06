@@ -2,10 +2,11 @@ import React, { useState } from 'react';
 import { View, TouchableOpacity, Text, Animated, Dimensions, StyleSheet, StatusBar } from "react-native";
 import { LinearGradient } from 'expo-linear-gradient';
 import Icon from 'react-native-vector-icons/Feather';
-import { useNavigation } from '@react-navigation/native';
+import { Link, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 
 import { RootStackParamList } from '../routes';
+import Login from '../pages/login/login';
 
 // Defina o tipo da navegação
 type NavbarProps = StackNavigationProp<RootStackParamList, keyof RootStackParamList>;
@@ -24,7 +25,7 @@ export function Navbar() {
         { key: 'Categorias', label: 'Painel de categorias', emoji: '🏷️' },
         { key: 'Orcamentos', label: 'Meus orçamentos', emoji: '💸' },
         { key: 'Metas', label: 'Minhas metas financeiras', emoji: '🎯' },
-        { key: 'Relatorios', label: 'Meus relatórios', emoji: '📊' }
+        { key: 'Relatorios', label: 'Meus relatórios', emoji: '📊' },
     ];    
 
     const toggleMenu = () => {
@@ -34,6 +35,10 @@ export function Navbar() {
             duration: 300,
             useNativeDriver: true,
         }).start();
+    };
+
+    const handleLogout = () => {
+        navigation.navigate('Login');
     };
 
     return (
@@ -83,6 +88,11 @@ export function Navbar() {
                         </View>
                     </TouchableOpacity>
                 ))}
+
+                <TouchableOpacity style={styles.sair} onPress={handleLogout}>
+                    <Icon name="log-out" size={24} color="#333" />
+                    <Text style={styles.optionText}>Sair</Text>
+                </TouchableOpacity>
             </Animated.View>
         </LinearGradient>
     );
@@ -155,4 +165,12 @@ const styles = StyleSheet.create({
         color: '#333',
         paddingVertical: 10,
     },
+    sair: {
+        position: 'absolute',
+        bottom: 20,
+        left: 20,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+    }
 });

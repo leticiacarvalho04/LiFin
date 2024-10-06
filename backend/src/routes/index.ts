@@ -2,13 +2,17 @@ import { Router } from "express";
 import DespesaController from "../controllers/controllerDespesa";
 import CategoriaController from "../controllers/controllerCategoria";
 import ReceitaController from "../controllers/controllerReceita";
+import UsuarioController from "../controllers/controllerUsuario";
 
 const router = Router();
 
+router.post("/cadastro/usuario", UsuarioController.cadastrarUsuario)
 router.post("/cadastro/categoria", CategoriaController.cadastrarCategoria);
 router.post("/cadastro/despesa", DespesaController.cadastrarDespesa);
 router.post("/cadastro/receita", ReceitaController.cadastrarReceita);
 
+router.get("/usuarios", UsuarioController.listarUsuario);
+router.get("/usuarios/:id", UsuarioController.listarUsuarioPorId);
 router.get("/categorias", CategoriaController.listarCategoria);
 router.get("/despesas", DespesaController.listarDespesas);
 router.get("/receitas", ReceitaController.listarReceita);

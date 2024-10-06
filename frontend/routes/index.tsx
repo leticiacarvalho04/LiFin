@@ -8,8 +8,10 @@ import PainelOrcamentos from '../pages/painel/painelOrcamentos';
 import PainelRelatorios from '../pages/painel/painelRelatorios';
 import CadastroCategoria from '../pages/cadastros/cadastroCategorias';
 import PainelDespesasReceitas from '../pages/painel/PainelDespesasReceitas';
+import Login from '../pages/login/login';
 
 export type RootStackParamList = {
+  Login: undefined;
   Home: undefined;
   CadastroDespesasReceitas: undefined;
   PainelDespesasReceitas: undefined;
@@ -24,7 +26,8 @@ const Stack = createStackNavigator<RootStackParamList>();
 
 export default function Routes() {
   return (
-    <Stack.Navigator initialRouteName="Home" screenOptions={{ headerShown: false }}>
+    <Stack.Navigator initialRouteName="Login" screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="Login" component={Login} />
       <Stack.Screen name="Home" component={Home} />
       <Stack.Screen name="CadastroDespesasReceitas" component={CadastroDespesasReceitas} />
       <Stack.Screen name="PainelDespesasReceitas" component={PainelDespesasReceitas} />
