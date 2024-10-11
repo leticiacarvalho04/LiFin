@@ -15,7 +15,8 @@ interface PropsFormulario {
   onInputChange?: (field: string, value: any) => void;
   onReset?: () => void;
   errors?: { [key: string]: string };
-  btn: { nome: string; tipoSucesso: string; rota: string; formValues: any };
+  btn: { nome: string; tipoSucesso: string; rota: string; formValues: any; onRedirect ?: () => void; };
+  onRedirect ?: () => void;
 }
 
 export default function Formulario(props: PropsFormulario) {
@@ -162,6 +163,7 @@ export default function Formulario(props: PropsFormulario) {
         rota={btn.rota}
         formValues={values}
         onPress={validateFields}
+        onRedirect={btn.onRedirect} // Passando a prop onRedirect
       />
     </KeyboardAwareScrollView>
   );

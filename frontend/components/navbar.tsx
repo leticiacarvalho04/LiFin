@@ -167,7 +167,7 @@ const styles = StyleSheet.create({
     },
     sair: {
         position: 'absolute',
-        bottom: 20,
+        bottom: 40,
         left: 20,
         flexDirection: 'row',
         alignItems: 'center',

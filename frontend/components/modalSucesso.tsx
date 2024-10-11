@@ -10,10 +10,14 @@ interface SucessModalProps {
   visible: boolean; 
   onSubmit?: () => void;
   onReset?: () => void;
+  onRedirect ?: () => void;
 }
 
-const ModalSucesso: React.FC<SucessModalProps> = ({ onClose, nome, tipoSucesso, visible, onSubmit }) => {
+const ModalSucesso: React.FC<SucessModalProps> = ({ onClose, nome, tipoSucesso, visible, onSubmit, onRedirect }) => {
   const handleOk = () => {
+    if (onRedirect && onClose) {
+      onRedirect(); // Chama onRedirect se estiver definido
+    }
     if (onClose) {
       onClose();  // Fecha o modal
     }

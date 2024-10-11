@@ -11,6 +11,7 @@ interface Props {
   rota: string;
   formValues: any;
   onPress?: () => boolean; // Função de validação deve retornar um booleano
+  onRedirect ?: () => void;
 }
 
 export default function BtnSalvar(props: Props) {
@@ -20,10 +21,12 @@ export default function BtnSalvar(props: Props) {
     setModalVisible(true);
     const dataToSend = {
       nome: props.formValues.Nome,
-      categoriaId: props.formValues.Categoria,
-      valor: props.formValues.Valor,
-      data: props.formValues.Data, // Data formatada
-      descricao: props.formValues.Descricao,
+      ...(props.formValues.Categoria && { categoriaId: props.formValues.Categoria }),
+      ...(props.formValues.Valor && { valor: props.formValues.Valor }),
+      ...(props.formValues.Data && { data: props.formValues.Data }), // Data formatada
+      ...(props.formValues.Descricao && { descricao: props.formValues.Descricao }),
+      ...(props.formValues.Email && { email: props.formValues.Email }),
+      ...(props.formValues.Senha && { senha: props.formValues.Senha }),
     };
     console.log('Dados a serem enviados:', dataToSend);
 

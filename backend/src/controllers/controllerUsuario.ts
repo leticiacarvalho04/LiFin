@@ -6,8 +6,8 @@ const colecaoUsuario = db.collection('usuarios');
 
 export default class UsuarioController {
     static async cadastrarUsuario(req: Request, res: Response) {
-        const { email, senha, nome } = req.body;
-        const usuario = await colecaoUsuario.add({ email, senha, nome });
+        const { nome, email, senha } = req.body;
+        const usuario = await colecaoUsuario.add({ nome, email, senha });
         return res.json(usuario);
     }
 
