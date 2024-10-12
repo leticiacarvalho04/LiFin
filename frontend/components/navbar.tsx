@@ -2,11 +2,9 @@ import React, { useState } from 'react';
 import { View, TouchableOpacity, Text, Animated, Dimensions, StyleSheet, StatusBar } from "react-native";
 import { LinearGradient } from 'expo-linear-gradient';
 import Icon from 'react-native-vector-icons/Feather';
-import { Link, useNavigation } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-
 import { RootStackParamList } from '../routes';
-import Login from '../pages/login/login';
 
 // Defina o tipo da navegação
 type NavbarProps = StackNavigationProp<RootStackParamList, keyof RootStackParamList>;
@@ -35,6 +33,10 @@ export function Navbar() {
             duration: 300,
             useNativeDriver: true,
         }).start();
+    };
+
+    const handleUser = () => {
+        navigation.navigate('PainelUsuario');
     };
 
     const handleLogout = () => {
@@ -68,8 +70,7 @@ export function Navbar() {
                 {opcoes.map((opcao, index) => (
                     <TouchableOpacity
                         key={opcao.key}
-                        style={[
-                            styles.optionButton, 
+                        style={[styles.optionButton, 
                             index === 0 && { marginTop: 20 } // Aplica margem apenas ao primeiro item
                         ]}
                         onPress={() => {
@@ -89,6 +90,11 @@ export function Navbar() {
                     </TouchableOpacity>
                 ))}
 
+                <TouchableOpacity style={styles.perfil} onPress={handleUser}>
+                    <Icon name="user" size={24} color="#333" />
+                    <Text style={styles.optionText}>Meu Perfil</Text>
+                </TouchableOpacity>
+
                 <TouchableOpacity style={styles.sair} onPress={handleLogout}>
                     <Icon name="log-out" size={24} color="#333" />
                     <Text style={styles.optionText}>Sair</Text>
@@ -103,8 +109,6 @@ const styles = StyleSheet.create({
         height: 100,
         justifyContent: 'center',
         paddingHorizontal: 20,
-        borderBottomLeftRadius: 10,
-        borderBottomRightRadius: 10,
         zIndex: 1,
     },
     menuContainer: {
@@ -164,6 +168,14 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: '#333',
         paddingVertical: 10,
+    },
+    perfil : {
+        position: 'absolute',
+        bottom: 100,
+        left: 20,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
     },
     sair: {
         position: 'absolute',

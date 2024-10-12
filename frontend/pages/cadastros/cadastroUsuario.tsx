@@ -9,7 +9,7 @@ interface PropsFormulario {
     btn: { nome: string; tipoSucesso: string; rota: string; onRedirect?: () => void; };
 }
 
-export default function CadastroUsuario(props: PropsFormulario) {
+export default function CadastroUsuario() {
     const initialValues = {
         Nome: '',
         Email: '',

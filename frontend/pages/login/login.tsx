@@ -4,7 +4,8 @@ import { useFonts } from "expo-font";
 import { MontserratAlternates_400Regular, MontserratAlternates_600SemiBold } from "@expo-google-fonts/montserrat-alternates";
 import { useState } from "react";
 import { useNavigation } from "@react-navigation/native";
-import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios from "axios"; // Importando Axios
 import { API_URL } from "../../api";
 
 export default function Login() {
@@ -25,24 +26,34 @@ export default function Login() {
     const handleLogin = async () => {
         setLoading(true);
         try {
-            const response = await axios.get(`${API_URL}/usuarios`);
-            const user = response.data.find((usuario: any) => usuario.email === email && usuario.senha === senha);
-
-            if (user) {
-                Alert.alert("Login bem-sucedido!");
-                setEmail("");
-                setSenha("");
-                navigation.navigate("Home");
-            } else {
-                Alert.alert("Email ou senha incorretos!");
+            console.log("Tentando fazer login com email:", email);
+            const response = await axios.post(`${API_URL}/login`, {
+                email,
+                senha
+            });
+    
+            console.log("Resposta do backend:", response.data);
+    
+            const userId = response.data.uid; // Pegando o ID do usuário retornado
+    
+            if (!userId) {
+                throw new Error("ID do usuário não encontrado na resposta.");
             }
+    
+            // Armazenando o ID do usuário no AsyncStorage
+            await AsyncStorage.setItem("userId", userId);
+            Alert.alert("Login bem-sucedido!");
+            setEmail("");
+            setSenha("");
+            navigation.navigate("Home");
+    
         } catch (error) {
-            console.error(error);
-            Alert.alert("Ocorreu um erro ao tentar fazer login.");
+            console.error("Erro de autenticação:", error);
+            Alert.alert("Ocorreu um erro ao tentar fazer login. Verifique suas credenciais.");
         } finally {
             setLoading(false);
         }
-    };
+    };               
 
     if (!fontsLoaded) {
         return <ActivityIndicator size="large" color="#0000ff" />;
@@ -91,7 +102,7 @@ export default function Login() {
                 </TouchableOpacity>
             </View>
         </View>
-    )
+    );
 }
 
 const styles = StyleSheet.create({

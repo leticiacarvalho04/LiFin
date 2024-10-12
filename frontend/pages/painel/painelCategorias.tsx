@@ -7,7 +7,6 @@ import { Categoria } from '../../types/categoria';
 import axios from 'axios';
 import Icon from 'react-native-vector-icons/Feather'; // Importando o ícone
 import { API_URL } from '../../api';
-import Swal from 'sweetalert2';
 import ModalSucesso from '../../components/modalSucesso';
 import ModalConfirmacaoDelete from '../../components/modalConfirmacaoDelete';
 import AsyncStorage from '@react-native-async-storage/async-storage';

@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
-import { db } from "../config";
 import Categoria from "../interface/categoria";
+import { db } from "../config";
 
 const colecaoCategorias = db.collection("categorias");
 

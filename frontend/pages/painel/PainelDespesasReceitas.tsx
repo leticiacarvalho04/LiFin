@@ -3,7 +3,7 @@ import Layout from "../../components/layout";
 import { useState } from "react";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import ListagemReceitas from "./listagemReceita";
-import ListagemDespesas from "./ListagemDespesas";
+import ListagemDespesas from "./listagemDespesas";
 
 export default function PainelDespesasReceitas() {
   const [selected, setSelected] = useState<'despesa' | 'receita'>('despesa');

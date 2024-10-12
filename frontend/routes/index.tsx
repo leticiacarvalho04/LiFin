@@ -7,12 +7,14 @@ import PainelMetas from '../pages/painel/painelMetas';
 import PainelOrcamentos from '../pages/painel/painelOrcamentos';
 import PainelRelatorios from '../pages/painel/painelRelatorios';
 import CadastroCategoria from '../pages/cadastros/cadastroCategorias';
-import PainelDespesasReceitas from '../pages/painel/PainelDespesasReceitas';
 import Login from '../pages/login/login';
 import CadastroUsuario from '../pages/cadastros/cadastroUsuario';
+import PainelUsuario from '../pages/painel/painelUsuario';
+import PainelDespesasReceitas from '../pages/painel/painelDespesasReceitas';
 
 export type RootStackParamList = {
   Login: undefined;
+  PainelUsuario: undefined;
   CadastrarUsuario: undefined;
   Home: undefined;
   CadastroDespesasReceitas: undefined;
@@ -30,6 +32,7 @@ export default function Routes() {
   return (
     <Stack.Navigator initialRouteName="Login" screenOptions={{ headerShown: false }}>
       <Stack.Screen name="Login" component={Login} />
+      <Stack.Screen name='PainelUsuario' component={PainelUsuario} />
       <Stack.Screen name="CadastrarUsuario" component={CadastroUsuario} />
       <Stack.Screen name="Home" component={Home} />
       <Stack.Screen name="CadastroDespesasReceitas" component={CadastroDespesasReceitas} />
