@@ -33,7 +33,7 @@ export default class UsuarioController {
         snapshot.forEach((doc) => {
             const { email, nome } = doc.data();
             usuarios.push({
-                id: doc.id, email, nome,
+                uid: doc.id, email, nome,
                 senha: '' // É melhor evitar retornar a senha, mesmo que esteja vazia
             });
         });

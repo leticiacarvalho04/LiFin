@@ -12,10 +12,6 @@ export default class AuthController {
             // Verifica se o usuário existe
             const userRecord = await auth.getUserByEmail(email);
 
-            // Aqui você precisa de um método para verificar a senha
-            // Se você não tiver um, precisará implementar a autenticação com o Firebase no frontend
-            // Por exemplo, você pode usar o Firebase Authentication para autenticar no frontend e então enviar o token para o backend
-
             // Caso a autenticação seja bem-sucedida, você pode criar um token JWT
             const token = jwt.sign({ uid: userRecord.uid, email: userRecord.email }, JWT_SECRET, {
                 expiresIn: "1h",

@@ -1,26 +1,33 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
+import { Usuario } from './../interface/usuario';
 
-// Substitua pelo seu segredo forte, e considere movê-lo para um arquivo de ambiente
-const JWT_SECRET = process.env.JWT_SECRET || "lifin203031"; // Melhor prática é usar variáveis de ambiente
+const JWT_SECRET = "lifin203031"; // Deve ser o mesmo usado no AuthController
 
-// Extensão da interface Request para incluir a propriedade user
-interface CustomRequest extends Request {
-    user?: any; // ou defina um tipo mais específico se você tiver um
+// Extendendo o tipo Request para incluir `usuarioAutenticado` como `Usuario`
+export interface AuthenticatedRequest extends Request {
+    usuarioAutenticado?: Usuario;
 }
 
-export function autenticarToken(req: CustomRequest, res: Response, next: NextFunction) {
-    const token = req.headers["authorization"]?.split(" ")[1]; // Assume que o token vem no formato "Bearer token"
+export const autenticarToken = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const token = req.headers["authorization"]?.split(" ")[1]; // Assumindo que o token seja passado como 'Bearer <token>'
 
     if (!token) {
-        return res.status(403).json({ erro: "Token não fornecido" });
+        return res.status(401).json({ erro: "Acesso negado. Token não fornecido." });
     }
 
     try {
-        const decoded = jwt.verify(token, JWT_SECRET);
-        req.user = decoded; // Adiciona os dados do usuário ao request
+        // Decodifica o token JWT
+        const decoded = jwt.verify(token, JWT_SECRET) as { uid: string; email: string };
+        
+        // Atribui o uid e email ao campo `usuarioAutenticado`
+        req.usuarioAutenticado = {
+            uid: decoded.uid,
+            email: decoded.email,
+        };
+
         next();
-    } catch (error) {
-        return res.status(401).json({ erro: "Token inválido" });
+    } catch (err) {
+        res.status(403).json({ erro: "Token inválido." });
     }
-}
+};

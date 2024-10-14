@@ -1,5 +1,5 @@
 // types/express/index.d.ts
-import { User } from "firebase/auth"; // Ou defina seu tipo personalizado de User
+import { User } from "firebase/auth"; 
 
 declare global {
   namespace Express {
