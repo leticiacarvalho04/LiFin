@@ -1,11 +1,11 @@
+import { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useFonts } from "expo-font";
 import { MontserratAlternates_400Regular, MontserratAlternates_600SemiBold } from "@expo-google-fonts/montserrat-alternates";
-import { useState } from "react";
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import axios from "axios"; // Importando Axios
+import axios from "axios";
 import { API_URL } from "../../api";
 
 export default function Login() {
@@ -19,6 +19,22 @@ export default function Login() {
         MontserratAlternates_600SemiBold,
     });
 
+    useEffect(() => {
+        const checkToken = async () => {
+            try {
+                const token = await AsyncStorage.getItem("token");
+                if (token) {
+                    // Se o token existir, pode-se navegar diretamente para a home ou outro fluxo desejado
+                    navigation.navigate("Home");
+                }
+            } catch (error) {
+                console.error("Erro ao verificar o token:", error);
+            }
+        };
+
+        checkToken();
+    }, []);
+
     const handleNavigateToUsuario = () => {
         navigation.navigate('CadastrarUsuario');
     };
@@ -26,22 +42,21 @@ export default function Login() {
     const handleLogin = async () => {
         setLoading(true);
         try {
-            console.log("Tentando fazer login com email:", email);
             const response = await axios.post(`${API_URL}/login`, {
                 email,
                 senha
             });
     
-            console.log("Resposta do backend:", response.data);
+            const { uid: userId, token } = response.data;
     
-            const userId = response.data.uid; // Pegando o ID do usuário retornado
-    
-            if (!userId) {
-                throw new Error("ID do usuário não encontrado na resposta.");
+            if (!userId || !token) {
+                throw new Error("Usuário ou token não encontrado na resposta.");
             }
-    
-            // Armazenando o ID do usuário no AsyncStorage
+
+            // Armazenando o token e o ID do usuário no AsyncStorage
+            await AsyncStorage.setItem("token", token);
             await AsyncStorage.setItem("userId", userId);
+    
             Alert.alert("Login bem-sucedido!");
             setEmail("");
             setSenha("");
@@ -53,7 +68,7 @@ export default function Login() {
         } finally {
             setLoading(false);
         }
-    };               
+    };
 
     if (!fontsLoaded) {
         return <ActivityIndicator size="large" color="#0000ff" />;
@@ -67,7 +82,6 @@ export default function Login() {
                 end={{ x: 0.9, y: 0.8 }}
                 style={StyleSheet.absoluteFillObject}
             />
-
             <Text style={styles.title}>LiFin</Text>
             <Text style={styles.subtitle}>Seu aplicativo definitivo de finanças pessoais!</Text>
             
@@ -153,10 +167,10 @@ const styles = StyleSheet.create({
         fontFamily: 'MontserratAlternates_600SemiBold',
     },
     link: {
-        flexDirection: 'row', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        marginTop: 5, 
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginTop: 5,
     },
     texto: {
         color: '#fff',
@@ -164,7 +178,7 @@ const styles = StyleSheet.create({
     },
     linkHighlight: {
         fontSize: 13,
-        marginLeft: 5, // Um pequeno espaço entre os textos
+        marginLeft: 5,
         color: '#a64ac9',
         fontWeight: 'bold',
     },

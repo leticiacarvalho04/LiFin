@@ -4,6 +4,7 @@ import { useState } from "react";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import ListagemReceitas from "./listagemReceita";
 import ListagemDespesas from "./listagemDespesas";
+import { useIsFocused } from "@react-navigation/native";
 
 export default function PainelDespesasReceitas() {
   const [selected, setSelected] = useState<'despesa' | 'receita'>('despesa');

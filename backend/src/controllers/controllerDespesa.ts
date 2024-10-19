@@ -1,14 +1,22 @@
 import { Request, Response } from "express";
 import { db } from "../config"; // Importa a configuração do Firebase
 import Despesas from "../interface/despesas"; // Importa a interface Despesas
+import { AuthenticatedRequest } from "../middleware/autenticarToken";
 
 const colecaoDespesas = db.collection("despesas");
 const colecaoCategorias = db.collection("categorias");
 
 export default class DespesaController {
-  static async cadastrarDespesa(req: Request, res: Response) {
+  
+  // Cadastrar Despesa
+  static async cadastrarDespesa(req: AuthenticatedRequest, res: Response) {
     try {
       const dados: Despesas = req.body;
+
+      // Verifica se o usuário está autenticado
+      if (!req.usuarioAutenticado) {
+        return res.status(401).json({ erro: "Usuário não autenticado" });
+      }
 
       // Verificar se a data está no formato DD-MM-YYYY
       if (!/^\d{2}-\d{2}-\d{4}$/.test(dados.data)) {
@@ -24,7 +32,7 @@ export default class DespesaController {
       }
 
       // Converter a data para o formato YYYY-MM-DD para salvar no Firestore
-      const dataFormatada = `${ano}-${mes}-${dia}`; // Formato YYYY-MM-DD
+      const dataFormatada = `${ano}-${mes}-${dia}`;
 
       // Verifica se a categoria existe
       const categoriaId = String(dados.categoriaId); // Converter para string
@@ -36,6 +44,9 @@ export default class DespesaController {
       if (!categoriaDoc.exists) {
         return res.status(400).json({ erro: "Categoria não encontrada" });
       }
+
+      // Adicionando o ID do usuário logado na categoria
+      const userId = req.usuarioAutenticado.uid; 
 
       // Gerar ID automaticamente
       const novaDespesaRef = colecaoDespesas.doc();
@@ -49,20 +60,26 @@ export default class DespesaController {
         valor: dados.valor,
         data: dataFormatada,
         descricao: dados.descricao,
+        userId: userId,
       });
 
-      // Retorna o ID e os dados cadastrados
-      const { id, ...dadosSemId } = dados;
-      return res.status(201).json({ id: novaDespesaId, ...dadosSemId });
+      return res.status(201).json({ id: novaDespesaId, ...dados });
     } catch (erro) {
       console.error("Erro ao cadastrar despesa:", erro);
       return res.status(500).json({ erro: "Falha ao cadastrar despesa" });
     }
   }
 
-  static async listarDespesas(req: Request, res: Response) {
+  // Listar Despesas
+  static async listarDespesas(req: AuthenticatedRequest, res: Response) {
     try {
-      const despesaSnapshot = await colecaoDespesas.get();
+      if (!req.usuarioAutenticado) {
+        return res.status(401).json({ erro: "Usuário não autenticado" });
+      }
+
+      const despesaSnapshot = await colecaoDespesas
+        .where("userId", "==", req.usuarioAutenticado.uid)
+        .get();
   
       const despesas = despesaSnapshot.docs.map((despesa) => {
         const dataDespesa = despesa.data().data;
@@ -70,19 +87,18 @@ export default class DespesaController {
         // Verificar se a data está no formato correto (YYYY-MM-DD)
         if (typeof dataDespesa !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(dataDespesa)) {
           console.error(`Data inválida encontrada: ${dataDespesa}`);
-          // Neste caso, continue com a próxima despesa
           return null;
         }
   
         const [ano, mes, dia] = dataDespesa.split('-');
-        const dataFormatada = `${dia}-${mes}-${ano}`; // Formato DD-MM-YYYY
+        const dataFormatada = `${dia}-${mes}-${ano}`;
   
         return {
           id: despesa.id,
           ...despesa.data(),
-          data: dataFormatada, // Formatando a data para o formato desejado
+          data: dataFormatada, 
         };
-      }).filter(despesa => despesa !== null); // Remover despesas inválidas
+      }).filter(despesa => despesa !== null);
   
       return res.status(200).json(despesas);
     } catch (erro) {
@@ -91,25 +107,55 @@ export default class DespesaController {
     }
   }
   
-
-  static async atualizarDespesa(req: Request, res: Response) {
-    const { id } = req.params;
-    const despesaAtualizada = req.body;
+  // Atualizar Despesa
+  static async atualizarDespesa(req: AuthenticatedRequest, res: Response) {
     try {
-        await db.collection('despesas').doc(id).update(despesaAtualizada);
-        res.json({ message: 'Despesa atualizada com sucesso' });
+      const { id } = req.params;
+      const despesaAtualizada: Partial<Despesas> = req.body;
+
+      if (!req.usuarioAutenticado) {
+        return res.status(401).json({ erro: "Usuário não autenticado" });
+      }
+
+      const despesaSnapshot = await colecaoDespesas.doc(id).get();
+      if (!despesaSnapshot.exists) {
+        return res.status(404).json({ erro: "Despesa não encontrada" });
+      }
+
+      const despesaData = despesaSnapshot.data();
+      if (despesaData?.userId !== req.usuarioAutenticado.uid) {
+        return res.status(403).json({ erro: "Acesso negado. Esta despesa não pertence a você." });
+      }
+    
+      await colecaoDespesas.doc(id).update(despesaAtualizada);
+      res.json({ message: 'Despesa atualizada com sucesso' });
     } catch (error) {
-        res.status(500).json({ message: 'Erro ao atualizar despesa', error });
+      res.status(500).json({ message: 'Erro ao atualizar despesa', error });
     }
   }
 
-  static async deletarDespesa(req: Request, res: Response) {
+  // Deletar Despesa
+  static async deletarDespesa(req: AuthenticatedRequest, res: Response) {
     const { id } = req.params;
     try {
-        await db.collection('despesas').doc(id).delete(); // Confirme que está deletando corretamente
-        res.json({ message: 'Despesa deletada com sucesso' });
+      if (!req.usuarioAutenticado) {
+        return res.status(401).json({ erro: "Usuário não autenticado" });
+      }
+
+      const despesaSnapshot = await colecaoDespesas.doc(id).get();
+      if (!despesaSnapshot.exists) {
+        return res.status(404).json({ erro: "Despesa não encontrada" });
+      }
+
+      const despesaData = despesaSnapshot.data();
+      if (despesaData?.userId !== req.usuarioAutenticado.uid) {
+        return res.status(403).json({ erro: "Acesso negado. Esta despesa não pertence a você." });
+      }
+
+      await colecaoDespesas.doc(id).delete();
+      return res.json({ message: 'Despesa deletada com sucesso' });
     } catch (error) {
-        res.status(500).json({ message: 'Erro ao deletar despesa', error });
+      return res.status(500).json({ message: 'Erro ao deletar despesa', error });
     }
   }
 }

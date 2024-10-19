@@ -8,6 +8,8 @@ import { Categoria } from '../types/categoria';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_URL } from '../api';
+import { NavigationProp, useNavigation } from '@react-navigation/native';
+import { RootStackParamList } from '../routes';
 
 interface PropsFormulario {
   fields: string[];
@@ -15,8 +17,7 @@ interface PropsFormulario {
   onInputChange?: (field: string, value: any) => void;
   onReset?: () => void;
   errors?: { [key: string]: string };
-  btn: { nome: string; tipoSucesso: string; rota: string; formValues: any; onRedirect ?: () => void; };
-  onRedirect ?: () => void;
+  btn: { nome: string; tipoSucesso: string; rota: string; formValues: any; onRedirect ?: string };
 }
 
 export default function Formulario(props: PropsFormulario) {
@@ -25,33 +26,41 @@ export default function Formulario(props: PropsFormulario) {
   const [loadingCategorias, setLoadingCategorias] = useState(false);
   const inputRefs = useRef<{ [key: string]: any }>({});
   const [isEmpty, setIsEmpty] = useState<{ [key: string]: boolean }>({});
-  
+  const [userId, setUserId] = useState<string | null>(null); // Estado para armazenar o ID do usuário
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+
   const { fields, values, onInputChange, onReset, btn } = props;
 
   useEffect(() => {
     const fetchCategorias = async () => {
-      setLoadingCategorias(true);
       try {
-        const response = await axios.get(`${API_URL}/categorias`);
+        // Obter o token de autenticação do AsyncStorage
+        const token = await AsyncStorage.getItem('token');
+        if (!token) {
+          navigation.navigate('Login'); // Redireciona para login se o token não estiver presente
+          return;
+        }
+
+        const response = await axios.get(`${API_URL}/categorias`, {
+          headers: { Authorization: `Bearer ${token}` }, // Adiciona o token no header
+        });
+
         const categoriasFirestore = response.data;
 
-        // Tenta recuperar categorias do AsyncStorage
         const storedCategoriasJSON = await AsyncStorage.getItem('categorias');
         const storedCategorias = storedCategoriasJSON ? JSON.parse(storedCategoriasJSON) : [];
 
-        // Se as categorias no Firestore forem diferentes das armazenadas ou se não houver registros
         if (JSON.stringify(categoriasFirestore) !== JSON.stringify(storedCategorias) || storedCategorias.length === 0) {
-          // Atualiza o AsyncStorage e o estado
           await AsyncStorage.setItem('categorias', JSON.stringify(categoriasFirestore));
           setCategorias(categoriasFirestore);
         } else {
-          // Se as categorias estiverem iguais, apenas as define do AsyncStorage
           setCategorias(storedCategorias);
         }
       } catch (error) {
-        console.error('Erro ao buscar categorias:', error);
-      } finally {
-        setLoadingCategorias(false);
+        console.error("Erro ao buscar categorias:", error);
+        if ((error as any).response?.status === 401) {
+          navigation.navigate('Login'); // Redireciona para login se o token for inválido
+        }
       }
     };
 

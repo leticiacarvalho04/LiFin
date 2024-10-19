@@ -11,6 +11,8 @@ import { Picker } from "@react-native-picker/picker";
 import Icon from "react-native-vector-icons/Feather";
 import ModalSucesso from "../../components/modalSucesso";
 import ModalConfirmacaoDelete from "../../components/modalConfirmacaoDelete";
+import { NavigationProp, useIsFocused, useNavigation } from "@react-navigation/native";
+import { RootStackParamList } from "../../routes";
 
 export default function ListagemDespesas() {
     const [painelValues, setPainelValues] = useState<Despesas[]>([]);
@@ -23,30 +25,50 @@ export default function ListagemDespesas() {
     const [modalMessage, setModalMessage] = useState({ nome: '', tipoSucesso: '' });
     const [confirmDeleteVisible, setConfirmDeleteVisible] = useState(false);
     const [despesaToDelete, setDespesaToDelete] = useState<Despesas | null>(null);
+    const isFocused = useIsFocused();
+    const navigation = useNavigation<NavigationProp<RootStackParamList>>();
 
     const fetchCategorias = async () => {
         try {
-            const response = await axios.get(`${API_URL}/categorias`);
-            const categoriasFirestore = response.data;
-
-            const storedCategoriasJSON = await AsyncStorage.getItem('categorias');
-            const storedCategorias = storedCategoriasJSON ? JSON.parse(storedCategoriasJSON) : [];
-
-            if (JSON.stringify(categoriasFirestore) !== JSON.stringify(storedCategorias) || storedCategorias.length === 0) {
-                await AsyncStorage.setItem('categorias', JSON.stringify(categoriasFirestore));
-                setCategorias(categoriasFirestore);
-            } else {
-                setCategorias(storedCategorias);
-            }
+          const token = await AsyncStorage.getItem('token');
+          if (!token) {
+            navigation.navigate('Login');
+            return;
+          }
+    
+          const response = await axios.get(`${API_URL}/categorias`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+    
+          const categoriasFirestore = response.data;
+          const storedCategoriasJSON = await AsyncStorage.getItem('categorias');
+          const storedCategorias = storedCategoriasJSON ? JSON.parse(storedCategoriasJSON) : [];
+    
+          if (JSON.stringify(categoriasFirestore) !== JSON.stringify(storedCategorias) || storedCategorias.length === 0) {
+            await AsyncStorage.setItem('categorias', JSON.stringify(categoriasFirestore));
+            setCategorias(categoriasFirestore);
+          } else {
+            setCategorias(storedCategorias);
+          }
         } catch (error) {
-            console.error("Erro ao buscar categorias:", error);
+          console.error("Erro ao buscar categorias:", error);
+          if ((error as any).response?.status === 401) {
+            navigation.navigate('Login');
+          }
         }
     };
 
     useEffect(() => {
         const fetchDespesas = async () => {
             try {
-                const response = await axios.get(`${API_URL}/despesas`);
+                const token = await AsyncStorage.getItem('token');
+                if (!token) {
+                    navigation.navigate('Login');
+                    return;
+                }
+                const response = await axios.get(`${API_URL}/despesas`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                  });
                 const despesasFirestore = response.data;
 
                 const storedDespesasJSON = await AsyncStorage.getItem('despesas');
@@ -70,6 +92,13 @@ export default function ListagemDespesas() {
         fetchCategorias();
         fetchDespesas();
     }, []);
+
+     // UseEffect para buscar categorias toda vez que a tela estiver em foco
+    useEffect(() => {
+        if (isFocused) {
+        fetchCategorias();
+        }
+    }, [isFocused]);
 
     const handleEdit = (index: number) => {
         setIsEditing(isEditing === index ? null : index);
@@ -120,8 +149,15 @@ export default function ListagemDespesas() {
     const handleSave = async (index: number) => {
         if (editedDespesa) {
             try {
+                const token = await AsyncStorage.getItem('token');
+                if (!token) {
+                    navigation.navigate('Login');
+                    return;
+                }
                 editedDespesa.data = formatDateToSave(date);
-                await axios.put(`${API_URL}/atualizar/despesa/${editedDespesa.id}`, editedDespesa);
+                await axios.put(`${API_URL}/atualizar/despesa/${editedDespesa.id}`, editedDespesa, {
+                    headers: { Authorization: `Bearer ${token}` },
+                  });
                 const updatedPainelValues = [...painelValues];
                 updatedPainelValues[index] = editedDespesa;
                 setPainelValues(updatedPainelValues);
@@ -138,7 +174,15 @@ export default function ListagemDespesas() {
     const confirmDelete = async () => {
         if (despesaToDelete) {
             try {
-                await axios.delete(`${API_URL}/excluir/despesa/${despesaToDelete.id}`);
+                const token = await AsyncStorage.getItem('token');
+                if (!token) {
+                    navigation.navigate('Login');
+                    return;
+                }
+
+                await axios.delete(`${API_URL}/excluir/despesa/${despesaToDelete.id}`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                  });
                 setPainelValues(prev => prev.filter(despesa => despesa.id !== despesaToDelete.id));
                 setModalMessage({ nome: 'Despesa', tipoSucesso: 'excluída' });
                 setModalVisible(true);

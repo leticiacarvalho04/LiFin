@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
-import { SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Keyboard, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Layout from '../../components/layout';
 import Formulario from '../../components/formulario';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function CadastroDespesasReceitas() {
   const [selected, setSelected] = useState<'despesa' | 'receita'>('despesa');
@@ -14,6 +15,7 @@ export default function CadastroDespesasReceitas() {
     Descricao: ''
   };
   const [formValues, setFormValues] = useState(initialValues);
+  const [userId, setUserId] = useState<string | null>(null); // Estado para armazenar o ID do usuário
 
   const handleInputChange = (field: string, value: any) => {
     setFormValues((prevValues) => ({
@@ -21,6 +23,22 @@ export default function CadastroDespesasReceitas() {
       [field]: value,
     }));
   };
+
+  useEffect(() => {
+    // Função para obter o ID do usuário do AsyncStorage
+    const fetchUserId = async () => {
+        try {
+            const storedUserId = await AsyncStorage.getItem("userId");
+            if (storedUserId) {
+                setUserId(storedUserId); // Definindo o ID do usuário
+            }
+        } catch (error) {
+            console.error("Erro ao buscar o ID do usuário:", error);
+        }
+    };
+
+    fetchUserId();
+}, []);
 
   const resetForm = () => {
     setFormValues(initialValues);

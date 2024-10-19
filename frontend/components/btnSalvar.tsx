@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { TouchableOpacity, View, Text, StyleSheet } from 'react-native';
 import ModalSucesso from './modalSucesso';
 import axios from 'axios';
 import { API_URL } from '../api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface Props {
   nome: string;
@@ -11,40 +12,62 @@ interface Props {
   rota: string;
   formValues: any;
   onPress?: () => boolean; // Função de validação deve retornar um booleano
-  onRedirect ?: () => void;
+  onRedirect ?: string;
 }
 
 export default function BtnSalvar(props: Props) {
   const [modalVisible, setModalVisible] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null); // Estado para armazenar o ID do usuário
+
+  useEffect(() => {
+    const fetchUserId = async () => {
+      try {
+        const storedUserId = await AsyncStorage.getItem('userId');
+        if (storedUserId) {
+          setUserId(storedUserId);
+        }
+      } catch (error) {
+        console.error("Erro ao buscar o ID do usuário:", error);
+      }
+    };
+
+    fetchUserId();
+  }, []);
 
   const handleSubmit = async () => {
+    const token = await AsyncStorage.getItem('token');
+    if (!token) {
+        alert('Deslogado!'); // Redireciona para login se o token não estiver presente
+        return;
+    }
+
     setModalVisible(true);
     const dataToSend = {
-      nome: props.formValues.Nome,
-      ...(props.formValues.Categoria && { categoriaId: props.formValues.Categoria }),
-      ...(props.formValues.Valor && { valor: props.formValues.Valor }),
-      ...(props.formValues.Data && { data: props.formValues.Data }), // Data formatada
-      ...(props.formValues.Descricao && { descricao: props.formValues.Descricao }),
-      ...(props.formValues.Email && { email: props.formValues.Email }),
-      ...(props.formValues.Senha && { senha: props.formValues.Senha }),
+        nome: props.formValues.Nome,
+        ...(props.formValues.Categoria && { categoriaId: props.formValues.Categoria }),
+        ...(props.formValues.Valor && { valor: props.formValues.Valor }),
+        ...(props.formValues.Data && { data: props.formValues.Data }), // Data formatada
+        ...(props.formValues.Descricao && { descricao: props.formValues.Descricao }),
+        ...(props.formValues.Email && { email: props.formValues.Email }),
+        ...(props.formValues.Senha && { senha: props.formValues.Senha }),
+        userId: userId, // Inclui o userId nos dados enviados
     };
-    console.log('Dados a serem enviados:', dataToSend);
 
     try {
-      const response = await axios.post(`${API_URL}/${props.rota}`, dataToSend);
-      if (response.status === 200 || 201) {
-        props.onReset && props.onReset();
-      } else {
-        console.error('Erro na resposta:', response);
-      }
+        const response = await axios.post(`${API_URL}/${props.rota}`, dataToSend, {
+            headers: { Authorization: `Bearer ${token}` }, // Adiciona o token no header
+        });
+
+        if (response.status === 200 || response.status === 201) {
+            props.onReset && props.onReset();
+            props.onRedirect && props.onRedirect; // Chama a função de redirecionamento
+        } else {
+            console.error('Erro na resposta:', response);
+        }
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        console.error('Erro ao enviar dados:', error.response?.data || error.message);
-      } else {
         console.error('Erro ao enviar dados:', error);
-      }
     }
-  };
+};
 
   const closeModal = () => {
     setModalVisible(false);
@@ -82,6 +105,7 @@ export default function BtnSalvar(props: Props) {
           tipoSucesso={props.tipoSucesso}
           onClose={closeModal}
           visible={modalVisible}
+          onRedirect={props.onRedirect}
         />
       )}
     </View>

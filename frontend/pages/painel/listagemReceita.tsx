@@ -5,13 +5,15 @@ import { Receitas } from "../../types/receitas";
 import { Categoria } from "../../types/categoria";
 import { API_URL } from "../../api";
 import Dropdown from "../../components/dropdown";
-import Icon from "react-native-vector-icons/MaterialIcons";
+import Icon from "react-native-vector-icons/Feather";
 import Swal from "sweetalert2";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Picker } from "@react-native-picker/picker";
 import ModalSucesso from "../../components/modalSucesso";
 import ModalConfirmacaoDelete from "../../components/modalConfirmacaoDelete";
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { NavigationProp, useIsFocused, useNavigation } from "@react-navigation/native";
+import { RootStackParamList } from "../../routes";
 
 export default function ListagemReceitas() {
     const [painelValues, setPainelValues] = useState<Receitas[]>([]);
@@ -24,35 +26,50 @@ export default function ListagemReceitas() {
     const [modalMessage, setModalMessage ] = useState({ nome: '', tipoSucesso: '' });
     const [confirmDeleteVisible, setConfirmDeleteVisible] = useState(false); // Modal de confirmação de exclusão
     const [receitaToDelete, setReceitaToDelete] = useState<Receitas | null>(null); 
-
+    const isFocused = useIsFocused();
+    const navigation = useNavigation<NavigationProp<RootStackParamList>>();
 
     const fetchCategorias = async () => {
         try {
-            const response = await axios.get(`${API_URL}/categorias`);
-            const categoriasFirestore = response.data;
-
-            // Tenta recuperar categorias do AsyncStorage
-            const storedCategoriasJSON = await AsyncStorage.getItem('categorias');
-            const storedCategorias = storedCategoriasJSON ? JSON.parse(storedCategoriasJSON) : [];
-
-            // Se as categorias no Firestore forem diferentes das armazenadas ou se não houver registros
-            if (JSON.stringify(categoriasFirestore) !== JSON.stringify(storedCategorias) || storedCategorias.length === 0) {
-            // Atualiza o AsyncStorage e o estado
+          const token = await AsyncStorage.getItem('token');
+          if (!token) {
+            navigation.navigate('Login');
+            return;
+          }
+    
+          const response = await axios.get(`${API_URL}/categorias`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+    
+          const categoriasFirestore = response.data;
+          const storedCategoriasJSON = await AsyncStorage.getItem('categorias');
+          const storedCategorias = storedCategoriasJSON ? JSON.parse(storedCategoriasJSON) : [];
+    
+          if (JSON.stringify(categoriasFirestore) !== JSON.stringify(storedCategorias) || storedCategorias.length === 0) {
             await AsyncStorage.setItem('categorias', JSON.stringify(categoriasFirestore));
             setCategorias(categoriasFirestore);
-            } else {
-            // Se as categorias estiverem iguais, apenas as define do AsyncStorage
+          } else {
             setCategorias(storedCategorias);
-            }
+          }
         } catch (error) {
-            console.error("Erro ao buscar categorias:", error);
+          console.error("Erro ao buscar categorias:", error);
+          if ((error as any).response?.status === 401) {
+            navigation.navigate('Login');
+          }
         }
     };
 
     useEffect(() => {
         const fetchReceitas = async () => {
             try {
-                const response = await axios.get(`${API_URL}/receitas`);
+                const token = await AsyncStorage.getItem('token');
+                if (!token) {
+                    navigation.navigate('Login');
+                    return;
+                }
+                const response = await axios.get(`${API_URL}/receitas`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
                 const receitasFirestore = response.data;
 
                 // Tenta recuperar categorias do AsyncStorage
@@ -82,6 +99,12 @@ export default function ListagemReceitas() {
         fetchCategorias();
         fetchReceitas();
     }, []);
+
+    useEffect(() => {
+        if (isFocused) {
+        fetchCategorias();
+        }
+    }, [isFocused]);
 
     const formatarData = (dataString: string): string => {
         const [dia, mes, ano] = dataString.split('-');
@@ -138,7 +161,14 @@ export default function ListagemReceitas() {
     const handleSave = async (index: number) => {
         if (editedReceita) {
             try {
-                await axios.put(`${API_URL}/atualizar/receita/${editedReceita.id}`, editedReceita);
+                const token = await AsyncStorage.getItem('token');
+                if (!token) {
+                    navigation.navigate('Login');
+                    return;
+                }
+                await axios.put(`${API_URL}/atualizar/receita/${editedReceita.id}`, editedReceita, {
+                    headers: { Authorization: `Bearer ${token}` },
+                  });
                 const updatedPainelValues = [...painelValues];
                 updatedPainelValues[index] = editedReceita;
                 setPainelValues(updatedPainelValues);
@@ -167,7 +197,14 @@ export default function ListagemReceitas() {
     const confirmDelete = async () => {
         if (receitaToDelete){
             try {
-                await axios.delete(`${API_URL}/excluir/receita/${receitaToDelete.id}`);
+                const token = await AsyncStorage.getItem('token');
+                if (!token) {
+                    navigation.navigate('Login');
+                    return;
+                }
+                await axios.delete(`${API_URL}/excluir/receita/${receitaToDelete.id}`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                  });
                 setPainelValues(prev => prev.filter(receita => receita.id !== receitaToDelete.id));
                 setModalMessage({ nome: 'Receita', tipoSucesso: 'excluída' });
                 setModalVisible(true);

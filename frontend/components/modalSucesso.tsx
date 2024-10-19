@@ -1,7 +1,9 @@
+import { NavigationProp, useNavigation } from '@react-navigation/native';
 import axios from 'axios';
 import React, { useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
+import { RootStackParamList } from '../routes';
 
 interface SucessModalProps {
   onClose?: () => void;
@@ -10,17 +12,19 @@ interface SucessModalProps {
   visible: boolean; 
   onSubmit?: () => void;
   onReset?: () => void;
-  onRedirect ?: () => void;
+  onRedirect ?: string;
 }
 
 const ModalSucesso: React.FC<SucessModalProps> = ({ onClose, nome, tipoSucesso, visible, onSubmit, onRedirect }) => {
-  const handleOk = () => {
-    if (onRedirect && onClose) {
-      onRedirect(); // Chama onRedirect se estiver definido
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+  const handleOk = () => {  
+    if (onRedirect) {
+      console.log("Redirecionando..."); // Adicione este log
+      navigation.navigate(onRedirect as keyof RootStackParamList); // Redireciona após o cadastro
     }
     if (onClose) {
-      onClose();  // Fecha o modal
-    }
+      onClose(); // Redireciona após o cadastro
+  }
   };
 
   return (

@@ -2,6 +2,9 @@ import { StyleSheet, Text, View, KeyboardAvoidingView, Platform, Keyboard, Dimen
 import Layout from "../../components/layout";
 import { useState, useEffect } from "react";
 import Formulario from "../../components/formulario";
+import AsyncStorage from '@react-native-async-storage/async-storage'; // Importando AsyncStorage
+import { NavigationProp, useNavigation } from "@react-navigation/native";
+import { RootStackParamList } from "../../routes";
 
 export default function CadastroCategoria() {
     const initialValues = {
@@ -10,6 +13,7 @@ export default function CadastroCategoria() {
 
     const [formValues, setFormValues] = useState(initialValues);
     const [isKeyboardVisible, setKeyboardVisible] = useState(false);
+    const [userId, setUserId] = useState<string | null>(null); // Estado para armazenar o ID do usuário
 
     const handleInputChange = (field: string, value: any) => {
         setFormValues((prevValues) => ({
@@ -23,6 +27,21 @@ export default function CadastroCategoria() {
     };
 
     useEffect(() => {
+        // Função para obter o ID do usuário do AsyncStorage
+        const fetchUserId = async () => {
+            try {
+                const storedUserId = await AsyncStorage.getItem("userId");
+                if (storedUserId) {
+                    setUserId(storedUserId); // Definindo o ID do usuário
+                }
+            } catch (error) {
+                console.error("Erro ao buscar o ID do usuário:", error);
+            }
+        };
+
+        fetchUserId();
+
+        // Listeners do teclado
         const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
             setKeyboardVisible(true);
         });
@@ -44,16 +63,22 @@ export default function CadastroCategoria() {
                 keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
             >
                 <View style={styles.contentContainer}>
-                    <View style={[styles.form, { height: isKeyboardVisible ? '50%' : '40%' }]}>
+                    <View style={[styles.form, { height: isKeyboardVisible ? '60%' : '40%' }]}>
                         <View style={styles.titulo}>
                             <Text style={styles.tituloText}>Cadastro de Categoria</Text>
                         </View>
                         <Formulario
                             values={formValues}
-                            fields={['Nome', 'Data']} // Inclua 'Data' aqui se necessário
+                            fields={['Nome']}
                             onInputChange={handleInputChange}
-                            onReset={resetForm} // Passando a função de reset
-                            btn={{ nome: 'Categoria', tipoSucesso: 'cadastrada', rota: 'cadastro/categoria', formValues }}
+                            onReset={resetForm}
+                            btn={{
+                                nome: 'Categoria',
+                                tipoSucesso: 'cadastrada',
+                                rota: 'cadastro/categoria',
+                                formValues: { ...formValues, userId },
+                                onRedirect: 'Categorias', // Enviando userId junto com os valores do formulário
+                            }}
                         />
                     </View>
                 </View>
