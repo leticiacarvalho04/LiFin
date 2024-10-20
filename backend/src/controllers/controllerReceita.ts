@@ -3,7 +3,7 @@ import { db } from "../config";
 import Receitas from "../interface/receitas";
 
 const colecaoReceitas = db.collection("receitas");
-const colecaoCategorias = db.collection("categorias");
+const colecaoCategorias = db.collection("categoriaReceita");
 
 export default class ReceitaController {
   

@@ -4,7 +4,7 @@ import Despesas from "../interface/despesas"; // Importa a interface Despesas
 import { AuthenticatedRequest } from "../middleware/autenticarToken";
 
 const colecaoDespesas = db.collection("despesas");
-const colecaoCategorias = db.collection("categorias");
+const colecaoCategorias = db.collection("categoriaDespesa");
 
 export default class DespesaController {
   

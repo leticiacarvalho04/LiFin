@@ -37,7 +37,7 @@ export default function ListagemReceitas() {
             return;
           }
     
-          const response = await axios.get(`${API_URL}/categorias`, {
+          const response = await axios.get(`${API_URL}/receitas/categorias`, {
             headers: { Authorization: `Bearer ${token}` },
           });
     
@@ -59,43 +59,43 @@ export default function ListagemReceitas() {
         }
     };
 
-    useEffect(() => {
-        const fetchReceitas = async () => {
-            try {
-                const token = await AsyncStorage.getItem('token');
-                if (!token) {
-                    navigation.navigate('Login');
-                    return;
-                }
-                const response = await axios.get(`${API_URL}/receitas`, {
-                    headers: { Authorization: `Bearer ${token}` },
-                });
-                const receitasFirestore = response.data;
-
-                // Tenta recuperar categorias do AsyncStorage
-                const storedReceitasJSON = await AsyncStorage.getItem('despesas');
-                const storedReceitas = storedReceitasJSON ? JSON.parse(storedReceitasJSON) : [];
-                
-                // Se as categorias no Firestore forem diferentes das armazenadas ou se não houver registros
-                if (JSON.stringify(receitasFirestore) !== JSON.stringify(storedReceitas) || storedReceitas.length === 0) {
-                    // Atualiza o AsyncStorage e o estado
-                    await AsyncStorage.setItem('categorias', JSON.stringify(receitasFirestore));
-                    const receitasData = response.data.map((receita: Receitas): Receitas => {
-                        return {
-                            ...receita,
-                            data: receita.data.split("T")[0]
-                        }
-                    });
-                    setPainelValues(receitasData);
-                } else {
-                    // Se as categorias estiverem iguais, apenas as define do AsyncStorage
-                    setPainelValues(storedReceitas);
-                }
-            } catch (error) {
-                console.error("Erro ao buscar receitas:", error);
+    const fetchReceitas = async () => {
+        try {
+            const token = await AsyncStorage.getItem('token');
+            if (!token) {
+                navigation.navigate('Login');
+                return;
             }
-        };
+            const response = await axios.get(`${API_URL}/receitas`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            const receitasFirestore = response.data;
 
+            // Tenta recuperar categorias do AsyncStorage
+            const storedReceitasJSON = await AsyncStorage.getItem('despesas');
+            const storedReceitas = storedReceitasJSON ? JSON.parse(storedReceitasJSON) : [];
+            
+            // Se as categorias no Firestore forem diferentes das armazenadas ou se não houver registros
+            if (JSON.stringify(receitasFirestore) !== JSON.stringify(storedReceitas) || storedReceitas.length === 0) {
+                // Atualiza o AsyncStorage e o estado
+                await AsyncStorage.setItem('categorias', JSON.stringify(receitasFirestore));
+                const receitasData = response.data.map((receita: Receitas): Receitas => {
+                    return {
+                        ...receita,
+                        data: receita.data.split("T")[0]
+                    }
+                });
+                setPainelValues(receitasData);
+            } else {
+                // Se as categorias estiverem iguais, apenas as define do AsyncStorage
+                setPainelValues(storedReceitas);
+            }
+        } catch (error) {
+            console.error("Erro ao buscar receitas:", error);
+        }
+    };
+
+    useEffect(() => {
         fetchCategorias();
         fetchReceitas();
     }, []);
@@ -103,6 +103,7 @@ export default function ListagemReceitas() {
     useEffect(() => {
         if (isFocused) {
         fetchCategorias();
+        fetchReceitas();
         }
     }, [isFocused]);
 
@@ -136,21 +137,20 @@ export default function ListagemReceitas() {
 
     const getCategoriaNome = (categoriaId: string) => {
         const categoria = categorias.find((cat) => cat.id === categoriaId);
-        return categoria ? categoria.nome : "Categoria desconhecida";
+        return categoria ? categoria.nome : "Categoria não selecionada";
     };
 
     const handleEdit = (index: number) => {
         setIsEditing(isEditing === index ? null : index);
         setEditedReceita(painelValues[index]);
-    
         if (painelValues[index].data) {
-            const dateParts = painelValues[index].data.split('-'); 
-            const day = parseInt(dateParts[0], 10);
-            const month = parseInt(dateParts[1], 10) - 1; 
-            const year = parseInt(dateParts[2], 10);
-            setDate(new Date(day, month, year)); 
-        }
-    };
+            const dateParts = painelValues[index].data.split('-');
+            const year = parseInt(dateParts[0], 10);
+            const month = parseInt(dateParts[1], 10) - 1;
+            const day = parseInt(dateParts[2], 10);
+            setDate(new Date(day, month, year));
+        } 
+    }; 
 
     const handleInputChange = (field: keyof Receitas, value: string) => {
         if (editedReceita) {

@@ -18,54 +18,18 @@ interface PropsFormulario {
   onReset?: () => void;
   errors?: { [key: string]: string };
   btn: { nome: string; tipoSucesso: string; rota: string; formValues: any; onRedirect ?: string };
+  categorias?: Categoria[]; // Mantendo como opcional
 }
 
 export default function Formulario(props: PropsFormulario) {
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [loadingCategorias, setLoadingCategorias] = useState(false);
   const inputRefs = useRef<{ [key: string]: any }>({});
   const [isEmpty, setIsEmpty] = useState<{ [key: string]: boolean }>({});
-  const [userId, setUserId] = useState<string | null>(null); // Estado para armazenar o ID do usuário
+  const [userId, setUserId] = useState<string | null>(null);
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
 
-  const { fields, values, onInputChange, onReset, btn } = props;
-
-  useEffect(() => {
-    const fetchCategorias = async () => {
-      try {
-        // Obter o token de autenticação do AsyncStorage
-        const token = await AsyncStorage.getItem('token');
-        if (!token) {
-          navigation.navigate('Login'); // Redireciona para login se o token não estiver presente
-          return;
-        }
-
-        const response = await axios.get(`${API_URL}/categorias`, {
-          headers: { Authorization: `Bearer ${token}` }, // Adiciona o token no header
-        });
-
-        const categoriasFirestore = response.data;
-
-        const storedCategoriasJSON = await AsyncStorage.getItem('categorias');
-        const storedCategorias = storedCategoriasJSON ? JSON.parse(storedCategoriasJSON) : [];
-
-        if (JSON.stringify(categoriasFirestore) !== JSON.stringify(storedCategorias) || storedCategorias.length === 0) {
-          await AsyncStorage.setItem('categorias', JSON.stringify(categoriasFirestore));
-          setCategorias(categoriasFirestore);
-        } else {
-          setCategorias(storedCategorias);
-        }
-      } catch (error) {
-        console.error("Erro ao buscar categorias:", error);
-        if ((error as any).response?.status === 401) {
-          navigation.navigate('Login'); // Redireciona para login se o token for inválido
-        }
-      }
-    };
-
-    fetchCategorias();
-  }, []);
+  const { fields, values, onInputChange, onReset, btn, categorias } = props;
 
   const validateFields = () => {
     const emptyFields = fields.reduce((acc, field) => {
@@ -145,9 +109,13 @@ export default function Formulario(props: PropsFormulario) {
                   style={styles.input}
                 >
                   <Picker.Item label="Selecione uma categoria" value="" />
-                  {categorias.map((categoria) => (
-                    <Picker.Item key={categoria.id} label={categoria.nome} value={categoria.id} />
-                  ))}
+                  {categorias && categorias.length > 0 ? (
+                    categorias.map((categoria) => (
+                      <Picker.Item key={categoria.id} label={categoria.nome} value={categoria.id} />
+                    ))
+                  ) : (
+                    <Picker.Item label="Nenhuma categoria disponível" value="" />
+                  )}
                 </Picker>
               )}
             </>
@@ -172,7 +140,8 @@ export default function Formulario(props: PropsFormulario) {
         rota={btn.rota}
         formValues={values}
         onPress={validateFields}
-        onRedirect={btn.onRedirect} // Passando a prop onRedirect
+        onRedirect={btn.onRedirect}
+        categoria={values.Categoria}
       />
     </KeyboardAwareScrollView>
   );

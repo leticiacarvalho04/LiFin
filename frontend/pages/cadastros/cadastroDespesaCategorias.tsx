@@ -6,7 +6,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage'; // Importa
 import { NavigationProp, useNavigation } from "@react-navigation/native";
 import { RootStackParamList } from "../../routes";
 
-export default function CadastroCategoria() {
+export default function CadastroDespesaCategoria() {
     const initialValues = {
         Nome: '',
     };
@@ -75,7 +75,7 @@ export default function CadastroCategoria() {
                             btn={{
                                 nome: 'Categoria',
                                 tipoSucesso: 'cadastrada',
-                                rota: 'cadastro/categoria',
+                                rota: 'cadastro/despesa/categoria',
                                 formValues: { ...formValues, userId },
                                 onRedirect: 'Categorias', // Enviando userId junto com os valores do formulário
                             }}

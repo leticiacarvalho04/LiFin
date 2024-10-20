@@ -36,7 +36,7 @@ export default function ListagemDespesas() {
             return;
           }
     
-          const response = await axios.get(`${API_URL}/categorias`, {
+          const response = await axios.get(`${API_URL}/despesas/categorias`, {
             headers: { Authorization: `Bearer ${token}` },
           });
     
@@ -58,45 +58,45 @@ export default function ListagemDespesas() {
         }
     };
 
-    useEffect(() => {
-        const fetchDespesas = async () => {
-            try {
-                const token = await AsyncStorage.getItem('token');
-                if (!token) {
-                    navigation.navigate('Login');
-                    return;
-                }
-                const response = await axios.get(`${API_URL}/despesas`, {
-                    headers: { Authorization: `Bearer ${token}` },
-                  });
-                const despesasFirestore = response.data;
-
-                const storedDespesasJSON = await AsyncStorage.getItem('despesas');
-                const storedDespesas = storedDespesasJSON ? JSON.parse(storedDespesasJSON) : [];
-
-                if (JSON.stringify(despesasFirestore) !== JSON.stringify(storedDespesas) || storedDespesas.length === 0) {
-                    await AsyncStorage.setItem('despesas', JSON.stringify(despesasFirestore));
-                    const despesasData = response.data.map((despesa: Despesas): Despesas => ({
-                        ...despesa,
-                        data: despesa.data ? despesa.data.split("T")[0].split('-').reverse().join('-') : ""
-                    }));                    
-                    setPainelValues(despesasData);
-                } else {
-                    setPainelValues(storedDespesas);
-                }
-            } catch (error) {
-                console.error("Erro ao buscar despesas:", error);
+    const fetchDespesas = async () => {
+        try {
+            const token = await AsyncStorage.getItem('token');
+            if (!token) {
+                navigation.navigate('Login');
+                return;
             }
-        };
+            const response = await axios.get(`${API_URL}/despesas`, {
+                headers: { Authorization: `Bearer ${token}` },
+              });
+            const despesasFirestore = response.data;
 
+            const storedDespesasJSON = await AsyncStorage.getItem('despesas');
+            const storedDespesas = storedDespesasJSON ? JSON.parse(storedDespesasJSON) : [];
+
+            if (JSON.stringify(despesasFirestore) !== JSON.stringify(storedDespesas) || storedDespesas.length === 0) {
+                await AsyncStorage.setItem('despesas', JSON.stringify(despesasFirestore));
+                const despesasData = response.data.map((despesa: Despesas): Despesas => ({
+                    ...despesa,
+                    data: despesa.data ? despesa.data.split("T")[0].split('-').reverse().join('-') : ""
+                }));                    
+                setPainelValues(despesasData);
+            } else {
+                setPainelValues(storedDespesas);
+            }
+        } catch (error) {
+            console.error("Erro ao buscar despesas:", error);
+        }
+    };
+
+    useEffect(() => {
         fetchCategorias();
         fetchDespesas();
     }, []);
 
-     // UseEffect para buscar categorias toda vez que a tela estiver em foco
     useEffect(() => {
         if (isFocused) {
         fetchCategorias();
+        fetchDespesas();
         }
     }, [isFocused]);
 
@@ -105,11 +105,11 @@ export default function ListagemDespesas() {
         setEditedDespesa(painelValues[index]);
         if (painelValues[index].data) {
             const dateParts = painelValues[index].data.split('-');
-            const year = parseInt(dateParts[2], 10);
+            const year = parseInt(dateParts[0], 10);
             const month = parseInt(dateParts[1], 10) - 1;
-            const day = parseInt(dateParts[0], 10);
-            setDate(new Date(year, month, day));
-        }
+            const day = parseInt(dateParts[2], 10);
+            setDate(new Date(day, month, year));
+        } 
     };
 
     const handleInputChange = (field: keyof Despesas, value: string) => {
@@ -119,14 +119,14 @@ export default function ListagemDespesas() {
     };
 
     const formatarData = (dataString: string): string => {
-        if (!dataString) return "";
-        const [ano, mes, dia] = dataString.split('-'); // A ordem é YYYY-MM-DD
+        const [dia, mes, ano] = dataString.split('-');
         const meses = [
             "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
             "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
         ];
-        return `${dia} de ${meses[parseInt(mes, 10) - 1]} de ${ano}`;
-    };    
+        const mesNome = meses[parseInt(mes, 10) - 1];
+        return `${dia} de ${mesNome} de ${ano}`;
+    };
 
     const formatDateToSave = (date: Date): string => {
         const year = date.getFullYear();
@@ -210,7 +210,7 @@ export default function ListagemDespesas() {
 
     const getCategoriaNome = (categoriaId: string) => {
         const categoria = categorias.find((cat) => cat.id === categoriaId);
-        return categoria ? categoria.nome : "Categoria desconhecida";
+        return categoria ? categoria.nome : "Categoria não selecionada";
     };
 
     const agruparDespesasPorMesEAno = (despesas: Despesas[]) => {

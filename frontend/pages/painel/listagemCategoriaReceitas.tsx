@@ -11,7 +11,7 @@ import ModalSucesso from '../../components/modalSucesso';
 import ModalConfirmacaoDelete from '../../components/modalConfirmacaoDelete';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export default function PainelCategorias() {
+export default function ListagemCategoriasReceitas() {
   const initialValues: Categoria[] = [];
   const [categorias, setCategorias] = useState<Categoria[]>(initialValues);
   const [isEditing, setIsEditing] = useState<number | null>(null);
@@ -32,22 +32,26 @@ export default function PainelCategorias() {
         return;
       }
 
-      const response = await axios.get(`${API_URL}/categorias`, {
+      const response = await axios.get(`${API_URL}/receitas/categorias`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
       const categoriasFirestore = response.data;
-      const storedCategoriasJSON = await AsyncStorage.getItem('categorias');
+      const storedCategoriasJSON = await AsyncStorage.getItem('categoriaReceita');
       const storedCategorias = storedCategoriasJSON ? JSON.parse(storedCategoriasJSON) : [];
 
       if (JSON.stringify(categoriasFirestore) !== JSON.stringify(storedCategorias) || storedCategorias.length === 0) {
-        await AsyncStorage.setItem('categorias', JSON.stringify(categoriasFirestore));
+        await AsyncStorage.setItem('categoriaDespesa', JSON.stringify(categoriasFirestore));
         setCategorias(categoriasFirestore);
       } else {
         setCategorias(storedCategorias);
-      }
+      }      
     } catch (error) {
-      console.error("Erro ao buscar categorias:", error);
+      if (axios.isAxiosError(error)) {
+        console.error("Erro ao buscar categorias:", error.response?.data || error.message);
+      } else {
+        console.error("Erro ao buscar categorias:", error);
+      }
       if ((error as any).response?.status === 401) {
         navigation.navigate('Login');
       }
@@ -83,7 +87,7 @@ export default function PainelCategorias() {
             navigation.navigate('Login');
             return;
         }
-        await axios.put(`${API_URL}/atualizar/categoria/${editedCategoria.id}`, editedCategoria, {
+        await axios.put(`${API_URL}/atualizar/receita/categoria/${editedCategoria.id}`, editedCategoria, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const updatedCategorias = [...categorias];
@@ -118,7 +122,7 @@ export default function PainelCategorias() {
                 navigation.navigate('Login');
                 return;
               }
-              await axios.delete(`${API_URL}/excluir/categoria/${categoriaToDelete.id}`, {
+              await axios.delete(`${API_URL}/excluir/receita/categoria/${categoriaToDelete.id}`, {
                 headers: { Authorization: `Bearer ${token}` },
               });
               setCategorias(prev => prev.filter(categoria => categoria.id !== categoriaToDelete.id));
@@ -142,11 +146,8 @@ export default function PainelCategorias() {
   };
 
   return (
-    <Layout>
       <View style={styles.container}>
-        <View style={styles.titulo}>
-          <Text style={styles.tituloText}>Minhas Categorias</Text>
-        </View>
+        
         {categorias.map((categoria: Categoria, index: number) => (
           <View key={index} style={styles.card}>
             {isEditing === index ? (
@@ -184,9 +185,6 @@ export default function PainelCategorias() {
             )}
           </View>
         ))}
-        <TouchableOpacity onPress={() => navigation.navigate('CadastrarCategoria')} style={styles.addButton}>
-          <Icon name='plus-circle' size={40} color="#000" />
-        </TouchableOpacity>
 
         <ModalSucesso 
           nome="Despesa"
@@ -201,7 +199,6 @@ export default function PainelCategorias() {
           nome={categoriaToDelete ? categoriaToDelete.nome : ''} 
         />
       </View>
-    </Layout>
   );
 }
 

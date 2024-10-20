@@ -4,6 +4,7 @@ import ModalSucesso from './modalSucesso';
 import axios from 'axios';
 import { API_URL } from '../api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Categoria } from '../types/categoria';
 
 interface Props {
   nome: string;
@@ -13,6 +14,7 @@ interface Props {
   formValues: any;
   onPress?: () => boolean; // Função de validação deve retornar um booleano
   onRedirect ?: string;
+  categoria?: Categoria[];
 }
 
 export default function BtnSalvar(props: Props) {
@@ -40,24 +42,27 @@ export default function BtnSalvar(props: Props) {
         alert('Deslogado!'); // Redireciona para login se o token não estiver presente
         return;
     }
-
+  
     setModalVisible(true);
+  
+    // Prepare os dados a serem enviados
     const dataToSend = {
         nome: props.formValues.Nome,
-        ...(props.formValues.Categoria && { categoriaId: props.formValues.Categoria }),
-        ...(props.formValues.Valor && { valor: props.formValues.Valor }),
-        ...(props.formValues.Data && { data: props.formValues.Data }), // Data formatada
-        ...(props.formValues.Descricao && { descricao: props.formValues.Descricao }),
-        ...(props.formValues.Email && { email: props.formValues.Email }),
-        ...(props.formValues.Senha && { senha: props.formValues.Senha }),
+        categoriaId: props.formValues.Categoria, // Certifique-se de que este é o ID da categoria
+        valor: props.formValues.Valor,
+        data: props.formValues.Data, // A data deve estar no formato esperado no backend
+        descricao: props.formValues.Descricao,
         userId: userId, // Inclui o userId nos dados enviados
     };
-
+  
+    console.log('Dados enviados:', dataToSend);
+  
     try {
         const response = await axios.post(`${API_URL}/${props.rota}`, dataToSend, {
             headers: { Authorization: `Bearer ${token}` }, // Adiciona o token no header
         });
-
+        console.log(response.data);
+  
         if (response.status === 200 || response.status === 201) {
             props.onReset && props.onReset();
             props.onRedirect && props.onRedirect; // Chama a função de redirecionamento
@@ -67,7 +72,8 @@ export default function BtnSalvar(props: Props) {
     } catch (error) {
         console.error('Erro ao enviar dados:', error);
     }
-};
+  };
+  
 
   const closeModal = () => {
     setModalVisible(false);
