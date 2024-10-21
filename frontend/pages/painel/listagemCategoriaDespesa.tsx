@@ -83,7 +83,7 @@ export default function ListagemCategoriasDespesas() {
             navigation.navigate('Login');
             return;
         }
-        await axios.put(`${API_URL}/atualizar/receita/categoria/${editedCategoria.id}`, editedCategoria, {
+        await axios.put(`${API_URL}/atualizar/despesa/categoria/${editedCategoria.id}`, editedCategoria, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const updatedCategorias = [...categorias];

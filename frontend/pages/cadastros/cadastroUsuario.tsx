@@ -4,6 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import BtnSalvar from "../../components/btnSalvar";
 import Icon from "react-native-vector-icons/Feather";
 import { TouchableOpacity } from "react-native";
+import BtnSalvarUsuario from "../../components/btnSalvarUsuario";
 
 interface PropsFormulario {
     btn: { nome: string; tipoSucesso: string; rota: string; onRedirect?: () => void; };
@@ -19,7 +20,7 @@ export default function CadastroUsuario() {
     const [formValues, setFormValues] = useState<{ [key: string]: string }>(initialValues);
     const [isKeyboardVisible, setKeyboardVisible] = useState(false);
     const [isEmpty, setIsEmpty] = useState<{ [key: string]: boolean }>({});
-
+    const [modalVisible, setModalVisible] = useState(false);
     const navigation = useNavigation<any>();
 
     const handleInputChange = (field: string, value: string) => {
@@ -100,7 +101,7 @@ export default function CadastroUsuario() {
                         {isEmpty.Senha && <Text style={styles.errorText}>Campo obrigatório</Text>}
                     </View>
 
-                    <BtnSalvar
+                    <BtnSalvarUsuario
                         nome={'Salvar'}
                         tipoSucesso={'cadastrada'}
                         onPress={() => {
