@@ -127,6 +127,7 @@ export default function Formulario(props: PropsFormulario) {
               value={values[field]}
               onChangeText={(text) => handleInputChange(field, text)}
               returnKeyType={index < fields.length - 1 ? 'next' : 'done'}
+              keyboardType={field === 'Valor' ? 'numeric' : 'default'} // Apenas para o campo Valor
             />
           )}
           {isEmpty[field] && <Text style={styles.errorText}>Campo obrigatório</Text>}

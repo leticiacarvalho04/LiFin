@@ -14,7 +14,7 @@ export default function CadastroDespesasReceitas() {
   const [selected, setSelected] = useState<'despesas' | 'receitas'>('despesas');
   const initialValues = {
     Nome: '',
-    Valor: '',
+    Valor: '0,00',
     Categoria: '',
     Data: '',
     Descricao: ''
@@ -26,12 +26,24 @@ export default function CadastroDespesasReceitas() {
   const isFocused = useIsFocused();
 
   const handleInputChange = (field: string, value: any) => {
-    setFormValues((prevValues) => ({
-      ...prevValues,
-      [field]: value,
-    }));
+    if (field === 'Valor') {
+      // Formatar o valor para sempre ter 2 casas decimais
+      const sanitizedValue = value.replace(/[^0-9]/g, ''); // Remove qualquer caractere que não seja número
+      const formattedValue = (Number(sanitizedValue) / 100).toLocaleString('pt-BR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+      setFormValues((prevValues) => ({
+        ...prevValues,
+        [field]: formattedValue,
+      }));
+    } else {
+      setFormValues((prevValues) => ({
+        ...prevValues,
+        [field]: value,
+      }));
+    }
   };
-
   
   const fetchCategorias = async () => {
     try {
@@ -49,7 +61,12 @@ export default function CadastroDespesasReceitas() {
       const categoriasFirestore = response.data;
       setCategorias(categoriasFirestore);
     } catch (error) {
-      console.error("Erro ao buscar categorias:", error);
+      if (axios.isAxiosError(error)) {
+        console.error('Erro ao enviar dados:', error.response?.data);
+        console.error('Status do erro:', error.response?.status);
+      } else {
+          console.error('Erro desconhecido:', error);
+      }
       if ((error as any).response?.status === 401) {
         navigation.navigate('Login');
       }
