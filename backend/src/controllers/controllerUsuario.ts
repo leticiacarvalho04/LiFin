@@ -1,6 +1,7 @@
 import { Usuario } from './../interface/usuario';
 import { Request, Response } from "express";
 import { db, auth } from '../config'; // Certifique-se de que está importando o auth do Firebase Admin
+import { AuthenticatedRequest } from '../middleware/autenticarToken';
 
 const colecaoUsuario = db.collection('usuarios');
 
@@ -17,9 +18,9 @@ export default class UsuarioController {
             });
 
             // Salva os dados do usuário no Firestore
-            const usuario = await colecaoUsuario.add({ nome, email, uid: userRecord.uid });
+            const usuario = await colecaoUsuario.doc(userRecord.uid).set({ nome, email, senha, uid: userRecord.uid });
 
-            return res.status(201).json({ id: usuario.id, nome, email, uid: userRecord.uid });
+            return res.status(201).json({ id: usuario, nome, email, uid: userRecord.uid });
         } catch (error) {
             // Retorna um erro se o registro falhar
             console.error("Erro ao cadastrar usuário:", error);
@@ -27,26 +28,68 @@ export default class UsuarioController {
         }
     }
 
-    static async listarUsuario(req: Request, res: Response) {
-        const usuarios: Usuario[] = [];
-        const snapshot = await colecaoUsuario.get();
-        snapshot.forEach((doc) => {
-            const { email, nome } = doc.data();
-            usuarios.push({
-                uid: doc.id, email, nome,
-                senha: '' // É melhor evitar retornar a senha, mesmo que esteja vazia
-            });
-        });
-        return res.json(usuarios);
+    static async listarUsuarioPorId(req: AuthenticatedRequest, res: Response) {
+        // Verifica se o usuário está autenticado
+        if (!req.usuarioAutenticado) {
+            return res.status(401).json({ erro: "Usuário não autenticado" });
+        }
+
+        try {
+            // Pega os dados do Firestore
+            const usuarioSnapshot = await colecaoUsuario.doc(req.usuarioAutenticado.uid).get();
+            const usuarioData = usuarioSnapshot.data();
+            if (usuarioData) {
+                return res.json({
+                    uid: usuarioData.uid,
+                    nome: usuarioData.nome,
+                    email: usuarioData.email,
+                    senha: usuarioData.senha // Agora você pode retornar a senha armazenada
+                });
+            } else {
+                return res.status(404).json({ erro: "Usuário não encontrado" });
+            }
+        } catch (error) {
+            console.error("Erro ao buscar usuário no Firestore:", error);
+            return res.status(500).json({ erro: "Erro ao buscar dados do usuário" });
+        }
     }
 
-    static async listarUsuarioPorId(req: Request, res: Response) {
-        const { id } = req.params;
-        const usuario = await colecaoUsuario.doc(id).get();
-        if (!usuario.exists) {
-            return res.status(404).json({ erro: 'Usuário não encontrado' });
+    static async atualizarUsuario(req: AuthenticatedRequest, res: Response) {
+        // Verifica se o usuário está autenticado
+        if (!req.usuarioAutenticado) {
+            return res.status(401).json({ erro: "Usuário não autenticado" });
         }
-        const { email, nome } = usuario.data() as Usuario;
-        return res.json({ id: usuario.id, email, nome });
+
+        const { nome, email, senha } = req.body;
+
+        try {
+            // Atualiza os dados do usuário no Firestore
+            const usuario = await colecaoUsuario.doc(req.usuarioAutenticado.uid).update({ nome, email, senha });
+
+            return res.json({ id: usuario, nome, email, senha });
+        } catch (error) {
+            console.error("Erro ao atualizar usuário:", error);
+            return res.status(400).json({ erro: (error as Error).message });
+        }
+    }
+
+    static async deletarUsuario(req: AuthenticatedRequest, res: Response) {
+        // Verifica se o usuário está autenticado
+        if (!req.usuarioAutenticado) {
+            return res.status(401).json({ erro: "Usuário não autenticado" });
+        }
+
+        try {
+            // Deleta o usuário do Firebase Authentication
+            await auth.deleteUser(req.usuarioAutenticado.uid);
+
+            // Deleta o usuário do Firestore
+            await colecaoUsuario.doc(req.usuarioAutenticado.uid).delete();
+
+            return res.json({ mensagem: "Usuário deletado com sucesso" });
+        } catch (error) {
+            console.error("Erro ao deletar usuário:", error);
+            return res.status(400).json({ erro: (error as Error).message });
+        }
     }
 }
