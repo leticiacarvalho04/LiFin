@@ -30,7 +30,6 @@
   <img src="https://img.shields.io/badge/Expo-A164E3?style=for-the-badge&logo=expo&logoColor=000000&color=A164E3"/> 
   <img src="https://img.shields.io/badge/Figma-A164E3?style=for-the-badge&logo=figma&logoColor=000000&color=A164E3"/>
   <img src="https://img.shields.io/badge/React--Native-A164E3?style=for-the-badge&logo=react&logoColor=000000&color=A164E3"/>
-  <img src="https://img.shields.io/badge/Tailwind-A164E3?style=for-the-badge&logo=tailwind&logoColor=000000&color=A164E3"/>
   <br> 
   <img src="https://img.shields.io/badge/CSS3-A164E3?style=for-the-badge&logo=css3&logoColor=000000&color=A164E3"/>
   <img src="https://img.shields.io/badge/JavaScript-A164E3?style=for-the-badge&logo=javascript&logoColor=000000&color=A164E3"/>
