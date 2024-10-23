@@ -40,8 +40,7 @@
 
 > <b>🔗 Links gerais</b>
 > <ul>
-> <li>Figma: <a href="https://theachievers.atlassian.net/jira/software/projects/API/boards/5">acesse aqui!</a></li>
-<!-- > <li>Site: <a href="https://github.com/TheAchieversDSM/API-2024.1-Back-End">acesse aqui!</a></li> -->
+> <li>Figma: <a href="https://www.figma.com/proto/NuDNcxqw0NI0jadGPVgDYs/Finan%C3%A7as-pessoais?node-id=2028-747&starting-point-node-id=2028%3A747">acesse aqui!</a></li>
 > </ul>
 
 <br />
