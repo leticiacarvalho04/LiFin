@@ -1,6 +1,5 @@
 import { NavigationProp, useNavigation } from '@react-navigation/native';
-import axios from 'axios';
-import React, { useEffect } from 'react';
+import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import { RootStackParamList } from '../routes';
@@ -12,19 +11,20 @@ interface SucessModalProps {
   visible: boolean; 
   onSubmit?: () => void;
   onReset?: () => void;
-  onRedirect ?: string;
+  onRedirect?: string;
 }
 
-const ModalSucesso: React.FC<SucessModalProps> = ({ onClose, nome, tipoSucesso, visible, onSubmit, onRedirect }) => {
+const ModalSucesso: React.FC<SucessModalProps> = ({onClose, nome, tipoSucesso, visible, onRedirect}) => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
-  const handleOk = () => {  
+
+  const handleOk = () => {
     if (onRedirect) {
-      console.log("Redirecionando..."); // Adicione este log
-      navigation.navigate(onRedirect as keyof RootStackParamList); // Redireciona após o cadastro
+      console.log("Redirecionando para:", onRedirect);
+      navigation.navigate(onRedirect as keyof RootStackParamList);
     }
     if (onClose) {
-      onClose(); // Redireciona após o cadastro
-  }
+      onClose();
+    }
   };
 
   return (
@@ -51,13 +51,11 @@ const ModalSucesso: React.FC<SucessModalProps> = ({ onClose, nome, tipoSucesso, 
             {nome} foi {tipoSucesso} com sucesso!
           </Text>
 
-          {onClose && (
-            <View style={styles.buttonContainer}>
-              <TouchableOpacity onPress={handleOk} style={styles.okButton}>
-                <Text style={styles.okButtonText}>OK</Text>
-              </TouchableOpacity>
-            </View>
-          )}
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity onPress={handleOk} style={styles.okButton}>
+              <Text style={styles.okButtonText}>OK</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
     </Modal>
@@ -100,7 +98,6 @@ const styles = StyleSheet.create({
     flex: 1,
     marginRight: 14,
     marginTop: 5,
-    width: '100%',
   },
   additionalMessage: {
     fontSize: 14,

@@ -1,13 +1,15 @@
-import React, { useState } from 'react';
-import { View, TouchableOpacity, Text, Animated, Dimensions, StyleSheet, StatusBar } from "react-native";
+import React, { useCallback, useEffect, useState } from 'react';
+import { View, TouchableOpacity, Text, Animated, Dimensions, StyleSheet, StatusBar, AppState } from "react-native";
 import { LinearGradient } from 'expo-linear-gradient';
 import Icon from 'react-native-vector-icons/Feather';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../routes';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Defina o tipo da navegação
 type NavbarProps = StackNavigationProp<RootStackParamList, keyof RootStackParamList>;
+import { AppStateStatus } from 'react-native';
 
 const { width, height } = Dimensions.get('screen'); // Obtém a altura total da tela, incluindo a área da barra de status
 
@@ -39,9 +41,35 @@ export function Navbar() {
         navigation.navigate('PainelUsuario');
     };
 
-    const handleLogout = () => {
+    useEffect(() => {
+        const subscription = AppState.addEventListener("change", handleAppStateChange);
+        return () => {
+            subscription.remove();
+        };
+    }, []);
+    
+    const handleAppStateChange = useCallback((nextAppState: AppStateStatus) => {
+        if (nextAppState === "background") {
+            clearUserId(); // Limpa o ID do usuário quando a aplicação vai para segundo plano
+        }
+    }, []);
+    
+    // Adicionando logs para debugging
+    const clearUserId = async () => {
+        try {
+            await AsyncStorage.removeItem("userId");
+            console.log("User ID cleared");
+        } catch (error) {
+            console.error("Error clearing user ID:", error);
+        }
+    };
+    
+    const handleLogout = async () => {
+        await clearUserId();
+        console.log("User logged out, navigating to Login");
         navigation.navigate('Login');
     };
+    
 
     return (
         <LinearGradient

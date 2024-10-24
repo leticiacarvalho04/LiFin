@@ -21,6 +21,8 @@ export default function PainelUsuario() {
     const [isPasswordVisible, setIsPasswordVisible] = useState<boolean>(false);
     const [isEditing, setIsEditing] = useState<boolean>(false); 
     const [modalVisible, setModalVisible] = useState<boolean>(false);
+    const [modalVisibleDelete, setModalVisibleDelete] = useState<boolean>(false);
+    const [isEmpty, setIsEmpty] = useState<{ [key: string]: boolean }>({});
 
     const buscarUsuario = async () => {
         try {
@@ -57,6 +59,16 @@ export default function PainelUsuario() {
         buscarUsuario();
         fetchUserId();
     }, []);
+
+    const validateFields = () => {
+        const emptyFields = {
+            Nome: !userName,
+            Email: !userEmail,
+            Senha: !userPassword,
+        };
+        setIsEmpty(emptyFields);
+        return Object.values(emptyFields).every((isEmpty) => !isEmpty);
+    };
 
     const handleEditar = () => {
         setIsEditing(true);
@@ -100,14 +112,14 @@ export default function PainelUsuario() {
                 return;
             }
             
-            await axios.delete(`${API_URL}/atualizar/usuario`, {
+            await axios.delete(`${API_URL}/excluir/usuario`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
 
             setIsEditing(false);
-            setModalVisible(true);
+            setModalVisibleDelete(true);
         } catch (error) {
-            console.error("Erro ao salvar usuário:", error);
+            console.error("Erro ao deletar usuário:", error);
         }
     }
 
@@ -128,6 +140,7 @@ export default function PainelUsuario() {
                             ) : (
                                 <Text style={styles.nome}>{userName}</Text>
                             )}
+                            {isEmpty.Nome && <Text style={styles.errorText}>Campo obrigatório</Text>}
                         </View>
                         <View style={styles.texto}>
                             <Text style={styles.label}>Email:</Text>
@@ -140,6 +153,7 @@ export default function PainelUsuario() {
                             ) : (
                                 <Text style={styles.textoIndividual}>{userEmail}</Text>
                             )}
+                            {isEmpty.Email && <Text style={styles.errorText}>Campo obrigatório</Text>}
                         </View>
                         <View style={styles.texto}>
                             <Text style={styles.label}>Senha:</Text>
@@ -167,6 +181,7 @@ export default function PainelUsuario() {
                                     </TouchableOpacity>
                                 </View>
                             )}
+                            {isEmpty.Senha && <Text style={styles.errorText}>Campo obrigatório</Text>}
                         </View>
                     </View>
                 ) : (
@@ -207,6 +222,15 @@ export default function PainelUsuario() {
                         tipoSucesso={'atualizado'}
                         onClose={closeModal}
                         visible={modalVisible}
+                    />
+                )}
+                {modalVisibleDelete && (
+                    <ModalSucesso
+                        nome={'Usuário'}
+                        tipoSucesso={'deletado'}
+                        onClose={closeModal}
+                        visible={modalVisibleDelete}
+                        onRedirect="Login"
                     />
                 )}
             </View>
@@ -345,5 +369,9 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         fontSize: 16,
         marginLeft: 5,
+    },
+    errorText: {
+        color: 'red',
+        marginTop: 5,
     },
 });
