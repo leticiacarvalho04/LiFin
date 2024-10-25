@@ -3,8 +3,8 @@ import Layout from "../../components/layout";
 import { useState } from "react";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import ListagemReceitas from "./listagemReceita";
-import ListagemDespesas from "./listagemDespesas";
 import { useIsFocused } from "@react-navigation/native";
+import ListagemDespesas from "./ListagemDespesas";
 
 export default function PainelDespesasReceitas() {
   const [selected, setSelected] = useState<'despesa' | 'receita'>('despesa');

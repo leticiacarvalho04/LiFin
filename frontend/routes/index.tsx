@@ -10,10 +10,10 @@ import CadastroCategoria from '../pages/cadastros/cadastroDespesaCategorias';
 import Login from '../pages/login/login';
 import CadastroUsuario from '../pages/cadastros/cadastroUsuario';
 import PainelUsuario from '../pages/painel/painelUsuario';
-import PainelDespesasReceitas from '../pages/painel/painelDespesasReceitas';
 import PainelCategoriasDespesasReceitas from '../pages/painel/painelCategoriaDespesaReceita';
 import CadastroDespesaCategoria from '../pages/cadastros/cadastroDespesaCategorias';
 import CadastroReceitaCategoria from '../pages/cadastros/cadastroReceitaCategorias';
+import PainelDespesasReceitas from '../pages/painel/PainelDespesasReceitas';
 
 export type RootStackParamList = {
   Login: undefined;
