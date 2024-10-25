@@ -1,17 +1,21 @@
 import { Request, Response } from "express";
 import { db } from "../config";
 import Receitas from "../interface/receitas";
+import { AuthenticatedRequest } from "../middleware/autenticarToken";
 
 const colecaoReceitas = db.collection("receitas");
 const colecaoCategorias = db.collection("categoriaReceita");
 
 export default class ReceitaController {
   
-  static async cadastrarReceita(req: Request, res: Response) {
+  static async cadastrarReceita(req: AuthenticatedRequest, res: Response) {
+    if (!req.usuarioAutenticado) {
+      return res.status(401).json({ erro: "Usuário não autenticado" });
+    }
+
     try {
       const dados: Receitas = req.body;
 
-      // Verifica formato de data (DD-MM-YYYY)
       if (!/^\d{2}-\d{2}-\d{4}$/.test(dados.data)) {
         return res.status(400).json({ erro: 'Formato de data inválido. Use DD-MM-YYYY.' });
       }
@@ -19,15 +23,12 @@ export default class ReceitaController {
       const [dia, mes, ano] = dados.data.split('-');
       const anoNumero = parseInt(ano, 10);
 
-      // Valida o ano (1900-2100)
       if (anoNumero < 1900 || anoNumero > 2100) {
         return res.status(400).json({ erro: 'Ano deve estar entre 1900 e 2100.' });
       }
 
-      // Formata a data para YYYY-MM-DD
       const dataFormatada = `${ano}-${mes}-${dia}`;
 
-      // Verifica se a categoria existe
       const categoriaId = String(dados.categoriaId);
       if (!categoriaId) {
         return res.status(400).json({ erro: "ID da categoria é obrigatório." });
@@ -38,11 +39,9 @@ export default class ReceitaController {
         return res.status(400).json({ erro: "Categoria não encontrada" });
       }
 
-      // Gera um novo ID para a receita
       const novaReceitaRef = colecaoReceitas.doc();
       const novaReceitaId = novaReceitaRef.id;
 
-      // Adiciona a receita à coleção
       await novaReceitaRef.set({
         id: novaReceitaId,
         nome: dados.nome,
@@ -50,6 +49,7 @@ export default class ReceitaController {
         valor: dados.valor,
         data: dataFormatada,
         descricao: dados.descricao,
+        usuarioId: req.usuarioAutenticado.uid // Adiciona o ID do usuário autenticado
       });
 
       const { id, ...dadosSemId } = dados;
@@ -59,20 +59,23 @@ export default class ReceitaController {
     }
   }
 
-  static async listarReceita(req: Request, res: Response) {
+  static async listarReceita(req: AuthenticatedRequest, res: Response) {
+    if (!req.usuarioAutenticado) {
+      return res.status(401).json({ erro: "Usuário não autenticado" });
+    }
+
     try {
-      const receitaSnapshot = await colecaoReceitas.get();
+      const receitaSnapshot = await colecaoReceitas.where('usuarioId', '==', req.usuarioAutenticado.uid).get();
       const receitas = receitaSnapshot.docs.map((receita) => {
         const dataTimestamp = receita.data().data;
 
-        // Verifica se a data está no formato YYYY-MM-DD
         if (typeof dataTimestamp !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(dataTimestamp)) {
           console.error(`Data inválida encontrada: ${dataTimestamp}`);
           return null;
         }
 
         const [ano, mes, dia] = dataTimestamp.split('-');
-        const dataFormatada = `${dia}-${mes}-${ano}`; // Formato DD-MM-YYYY
+        const dataFormatada = `${dia}-${mes}-${ano}`;
 
         return {
           id: receita.id,
