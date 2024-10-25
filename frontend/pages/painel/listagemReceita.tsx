@@ -5,13 +5,15 @@ import { Receitas } from "../../types/receitas";
 import { Categoria } from "../../types/categoria";
 import { API_URL } from "../../api";
 import Dropdown from "../../components/dropdown";
-import Icon from "react-native-vector-icons/MaterialIcons";
+import Icon from "react-native-vector-icons/Feather";
 import Swal from "sweetalert2";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Picker } from "@react-native-picker/picker";
 import ModalSucesso from "../../components/modalSucesso";
 import ModalConfirmacaoDelete from "../../components/modalConfirmacaoDelete";
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { NavigationProp, useIsFocused, useNavigation } from "@react-navigation/native";
+import { RootStackParamList } from "../../routes";
 
 export default function ListagemReceitas() {
     const [painelValues, setPainelValues] = useState<Receitas[]>([]);
@@ -24,64 +26,86 @@ export default function ListagemReceitas() {
     const [modalMessage, setModalMessage ] = useState({ nome: '', tipoSucesso: '' });
     const [confirmDeleteVisible, setConfirmDeleteVisible] = useState(false); // Modal de confirmação de exclusão
     const [receitaToDelete, setReceitaToDelete] = useState<Receitas | null>(null); 
-
+    const isFocused = useIsFocused();
+    const navigation = useNavigation<NavigationProp<RootStackParamList>>();
 
     const fetchCategorias = async () => {
         try {
-            const response = await axios.get(`${API_URL}/categorias`);
-            const categoriasFirestore = response.data;
-
-            // Tenta recuperar categorias do AsyncStorage
-            const storedCategoriasJSON = await AsyncStorage.getItem('categorias');
-            const storedCategorias = storedCategoriasJSON ? JSON.parse(storedCategoriasJSON) : [];
-
-            // Se as categorias no Firestore forem diferentes das armazenadas ou se não houver registros
-            if (JSON.stringify(categoriasFirestore) !== JSON.stringify(storedCategorias) || storedCategorias.length === 0) {
-            // Atualiza o AsyncStorage e o estado
+          const token = await AsyncStorage.getItem('token');
+          if (!token) {
+            navigation.navigate('Login');
+            return;
+          }
+    
+          const response = await axios.get(`${API_URL}/receitas/categorias`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+    
+          const categoriasFirestore = response.data;
+          const storedCategoriasJSON = await AsyncStorage.getItem('categorias');
+          const storedCategorias = storedCategoriasJSON ? JSON.parse(storedCategoriasJSON) : [];
+    
+          if (JSON.stringify(categoriasFirestore) !== JSON.stringify(storedCategorias) || storedCategorias.length === 0) {
             await AsyncStorage.setItem('categorias', JSON.stringify(categoriasFirestore));
             setCategorias(categoriasFirestore);
-            } else {
-            // Se as categorias estiverem iguais, apenas as define do AsyncStorage
+          } else {
             setCategorias(storedCategorias);
+          }
+        } catch (error) {
+          console.error("Erro ao buscar categorias:", error);
+          if ((error as any).response?.status === 401) {
+            navigation.navigate('Login');
+          }
+        }
+    };
+
+    const fetchReceitas = async () => {
+        try {
+            const token = await AsyncStorage.getItem('token');
+            if (!token) {
+                navigation.navigate('Login');
+                return;
+            }
+            const response = await axios.get(`${API_URL}/receitas`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            const receitasFirestore = response.data;
+
+            // Tenta recuperar categorias do AsyncStorage
+            const storedReceitasJSON = await AsyncStorage.getItem('despesas');
+            const storedReceitas = storedReceitasJSON ? JSON.parse(storedReceitasJSON) : [];
+            
+            // Se as categorias no Firestore forem diferentes das armazenadas ou se não houver registros
+            if (JSON.stringify(receitasFirestore) !== JSON.stringify(storedReceitas) || storedReceitas.length === 0) {
+                // Atualiza o AsyncStorage e o estado
+                await AsyncStorage.setItem('categorias', JSON.stringify(receitasFirestore));
+                const receitasData = response.data.map((receita: Receitas): Receitas => {
+                    return {
+                        ...receita,
+                        data: receita.data.split("T")[0]
+                    }
+                });
+                setPainelValues(receitasData);
+            } else {
+                // Se as categorias estiverem iguais, apenas as define do AsyncStorage
+                setPainelValues(storedReceitas);
             }
         } catch (error) {
-            console.error("Erro ao buscar categorias:", error);
+            console.error("Erro ao buscar receitas:", error);
         }
     };
 
     useEffect(() => {
-        const fetchReceitas = async () => {
-            try {
-                const response = await axios.get(`${API_URL}/receitas`);
-                const receitasFirestore = response.data;
-
-                // Tenta recuperar categorias do AsyncStorage
-                const storedReceitasJSON = await AsyncStorage.getItem('despesas');
-                const storedReceitas = storedReceitasJSON ? JSON.parse(storedReceitasJSON) : [];
-                
-                // Se as categorias no Firestore forem diferentes das armazenadas ou se não houver registros
-                if (JSON.stringify(receitasFirestore) !== JSON.stringify(storedReceitas) || storedReceitas.length === 0) {
-                    // Atualiza o AsyncStorage e o estado
-                    await AsyncStorage.setItem('categorias', JSON.stringify(receitasFirestore));
-                    const receitasData = response.data.map((receita: Receitas): Receitas => {
-                        return {
-                            ...receita,
-                            data: receita.data.split("T")[0]
-                        }
-                    });
-                    setPainelValues(receitasData);
-                } else {
-                    // Se as categorias estiverem iguais, apenas as define do AsyncStorage
-                    setPainelValues(storedReceitas);
-                }
-            } catch (error) {
-                console.error("Erro ao buscar receitas:", error);
-            }
-        };
-
         fetchCategorias();
         fetchReceitas();
     }, []);
+
+    useEffect(() => {
+        if (isFocused) {
+        fetchCategorias();
+        fetchReceitas();
+        }
+    }, [isFocused]);
 
     const formatarData = (dataString: string): string => {
         const [dia, mes, ano] = dataString.split('-');
@@ -113,21 +137,20 @@ export default function ListagemReceitas() {
 
     const getCategoriaNome = (categoriaId: string) => {
         const categoria = categorias.find((cat) => cat.id === categoriaId);
-        return categoria ? categoria.nome : "Categoria desconhecida";
+        return categoria ? categoria.nome : "Categoria não selecionada";
     };
 
     const handleEdit = (index: number) => {
         setIsEditing(isEditing === index ? null : index);
         setEditedReceita(painelValues[index]);
-    
         if (painelValues[index].data) {
-            const dateParts = painelValues[index].data.split('-'); 
-            const day = parseInt(dateParts[0], 10);
-            const month = parseInt(dateParts[1], 10) - 1; 
-            const year = parseInt(dateParts[2], 10);
-            setDate(new Date(day, month, year)); 
-        }
-    };
+            const dateParts = painelValues[index].data.split('-');
+            const year = parseInt(dateParts[0], 10);
+            const month = parseInt(dateParts[1], 10) - 1;
+            const day = parseInt(dateParts[2], 10);
+            setDate(new Date(day, month, year));
+        } 
+    }; 
 
     const handleInputChange = (field: keyof Receitas, value: string) => {
         if (editedReceita) {
@@ -138,7 +161,14 @@ export default function ListagemReceitas() {
     const handleSave = async (index: number) => {
         if (editedReceita) {
             try {
-                await axios.put(`${API_URL}/atualizar/receita/${editedReceita.id}`, editedReceita);
+                const token = await AsyncStorage.getItem('token');
+                if (!token) {
+                    navigation.navigate('Login');
+                    return;
+                }
+                await axios.put(`${API_URL}/atualizar/receita/${editedReceita.id}`, editedReceita, {
+                    headers: { Authorization: `Bearer ${token}` },
+                  });
                 const updatedPainelValues = [...painelValues];
                 updatedPainelValues[index] = editedReceita;
                 setPainelValues(updatedPainelValues);
@@ -167,7 +197,14 @@ export default function ListagemReceitas() {
     const confirmDelete = async () => {
         if (receitaToDelete){
             try {
-                await axios.delete(`${API_URL}/excluir/receita/${receitaToDelete.id}`);
+                const token = await AsyncStorage.getItem('token');
+                if (!token) {
+                    navigation.navigate('Login');
+                    return;
+                }
+                await axios.delete(`${API_URL}/excluir/receita/${receitaToDelete.id}`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                  });
                 setPainelValues(prev => prev.filter(receita => receita.id !== receitaToDelete.id));
                 setModalMessage({ nome: 'Receita', tipoSucesso: 'excluída' });
                 setModalVisible(true);

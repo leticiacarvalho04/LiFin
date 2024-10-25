@@ -11,6 +11,8 @@ import { Picker } from "@react-native-picker/picker";
 import Icon from "react-native-vector-icons/Feather";
 import ModalSucesso from "../../components/modalSucesso";
 import ModalConfirmacaoDelete from "../../components/modalConfirmacaoDelete";
+import { NavigationProp, useIsFocused, useNavigation } from "@react-navigation/native";
+import { RootStackParamList } from "../../routes";
 
 export default function ListagemDespesas() {
     const [painelValues, setPainelValues] = useState<Despesas[]>([]);
@@ -23,64 +25,91 @@ export default function ListagemDespesas() {
     const [modalMessage, setModalMessage] = useState({ nome: '', tipoSucesso: '' });
     const [confirmDeleteVisible, setConfirmDeleteVisible] = useState(false);
     const [despesaToDelete, setDespesaToDelete] = useState<Despesas | null>(null);
+    const isFocused = useIsFocused();
+    const navigation = useNavigation<NavigationProp<RootStackParamList>>();
 
     const fetchCategorias = async () => {
         try {
-            const response = await axios.get(`${API_URL}/categorias`);
-            const categoriasFirestore = response.data;
+          const token = await AsyncStorage.getItem('token');
+          if (!token) {
+            navigation.navigate('Login');
+            return;
+          }
+    
+          const response = await axios.get(`${API_URL}/despesas/categorias`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+    
+          const categoriasFirestore = response.data;
+          const storedCategoriasJSON = await AsyncStorage.getItem('categorias');
+          const storedCategorias = storedCategoriasJSON ? JSON.parse(storedCategoriasJSON) : [];
+    
+          if (JSON.stringify(categoriasFirestore) !== JSON.stringify(storedCategorias) || storedCategorias.length === 0) {
+            await AsyncStorage.setItem('categorias', JSON.stringify(categoriasFirestore));
+            setCategorias(categoriasFirestore);
+          } else {
+            setCategorias(storedCategorias);
+          }
+        } catch (error) {
+          console.error("Erro ao buscar categorias:", error);
+          if ((error as any).response?.status === 401) {
+            navigation.navigate('Login');
+          }
+        }
+    };
 
-            const storedCategoriasJSON = await AsyncStorage.getItem('categorias');
-            const storedCategorias = storedCategoriasJSON ? JSON.parse(storedCategoriasJSON) : [];
+    const fetchDespesas = async () => {
+        try {
+            const token = await AsyncStorage.getItem('token');
+            if (!token) {
+                navigation.navigate('Login');
+                return;
+            }
+            const response = await axios.get(`${API_URL}/despesas`, {
+                headers: { Authorization: `Bearer ${token}` },
+              });
+            const despesasFirestore = response.data;
 
-            if (JSON.stringify(categoriasFirestore) !== JSON.stringify(storedCategorias) || storedCategorias.length === 0) {
-                await AsyncStorage.setItem('categorias', JSON.stringify(categoriasFirestore));
-                setCategorias(categoriasFirestore);
+            const storedDespesasJSON = await AsyncStorage.getItem('despesas');
+            const storedDespesas = storedDespesasJSON ? JSON.parse(storedDespesasJSON) : [];
+
+            if (JSON.stringify(despesasFirestore) !== JSON.stringify(storedDespesas) || storedDespesas.length === 0) {
+                await AsyncStorage.setItem('despesas', JSON.stringify(despesasFirestore));
+                const despesasData = response.data.map((despesa: Despesas): Despesas => ({
+                    ...despesa,
+                    data: despesa.data ? despesa.data.split("T")[0].split('-').reverse().join('-') : ""
+                }));                    
+                setPainelValues(despesasData);
             } else {
-                setCategorias(storedCategorias);
+                setPainelValues(storedDespesas);
             }
         } catch (error) {
-            console.error("Erro ao buscar categorias:", error);
+            console.error("Erro ao buscar despesas:", error);
         }
     };
 
     useEffect(() => {
-        const fetchDespesas = async () => {
-            try {
-                const response = await axios.get(`${API_URL}/despesas`);
-                const despesasFirestore = response.data;
-
-                const storedDespesasJSON = await AsyncStorage.getItem('despesas');
-                const storedDespesas = storedDespesasJSON ? JSON.parse(storedDespesasJSON) : [];
-
-                if (JSON.stringify(despesasFirestore) !== JSON.stringify(storedDespesas) || storedDespesas.length === 0) {
-                    await AsyncStorage.setItem('despesas', JSON.stringify(despesasFirestore));
-                    const despesasData = response.data.map((despesa: Despesas): Despesas => ({
-                        ...despesa,
-                        data: despesa.data ? despesa.data.split("T")[0].split('-').reverse().join('-') : ""
-                    }));                    
-                    setPainelValues(despesasData);
-                } else {
-                    setPainelValues(storedDespesas);
-                }
-            } catch (error) {
-                console.error("Erro ao buscar despesas:", error);
-            }
-        };
-
         fetchCategorias();
         fetchDespesas();
     }, []);
+
+    useEffect(() => {
+        if (isFocused) {
+        fetchCategorias();
+        fetchDespesas();
+        }
+    }, [isFocused]);
 
     const handleEdit = (index: number) => {
         setIsEditing(isEditing === index ? null : index);
         setEditedDespesa(painelValues[index]);
         if (painelValues[index].data) {
             const dateParts = painelValues[index].data.split('-');
-            const year = parseInt(dateParts[2], 10);
+            const year = parseInt(dateParts[0], 10);
             const month = parseInt(dateParts[1], 10) - 1;
-            const day = parseInt(dateParts[0], 10);
-            setDate(new Date(year, month, day));
-        }
+            const day = parseInt(dateParts[2], 10);
+            setDate(new Date(day, month, year));
+        } 
     };
 
     const handleInputChange = (field: keyof Despesas, value: string) => {
@@ -90,14 +119,14 @@ export default function ListagemDespesas() {
     };
 
     const formatarData = (dataString: string): string => {
-        if (!dataString) return "";
-        const [ano, mes, dia] = dataString.split('-'); // A ordem é YYYY-MM-DD
+        const [dia, mes, ano] = dataString.split('-');
         const meses = [
             "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
             "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
         ];
-        return `${dia} de ${meses[parseInt(mes, 10) - 1]} de ${ano}`;
-    };    
+        const mesNome = meses[parseInt(mes, 10) - 1];
+        return `${dia} de ${mesNome} de ${ano}`;
+    };
 
     const formatDateToSave = (date: Date): string => {
         const year = date.getFullYear();
@@ -120,8 +149,15 @@ export default function ListagemDespesas() {
     const handleSave = async (index: number) => {
         if (editedDespesa) {
             try {
+                const token = await AsyncStorage.getItem('token');
+                if (!token) {
+                    navigation.navigate('Login');
+                    return;
+                }
                 editedDespesa.data = formatDateToSave(date);
-                await axios.put(`${API_URL}/atualizar/despesa/${editedDespesa.id}`, editedDespesa);
+                await axios.put(`${API_URL}/atualizar/despesa/${editedDespesa.id}`, editedDespesa, {
+                    headers: { Authorization: `Bearer ${token}` },
+                  });
                 const updatedPainelValues = [...painelValues];
                 updatedPainelValues[index] = editedDespesa;
                 setPainelValues(updatedPainelValues);
@@ -138,7 +174,15 @@ export default function ListagemDespesas() {
     const confirmDelete = async () => {
         if (despesaToDelete) {
             try {
-                await axios.delete(`${API_URL}/excluir/despesa/${despesaToDelete.id}`);
+                const token = await AsyncStorage.getItem('token');
+                if (!token) {
+                    navigation.navigate('Login');
+                    return;
+                }
+
+                await axios.delete(`${API_URL}/excluir/despesa/${despesaToDelete.id}`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                  });
                 setPainelValues(prev => prev.filter(despesa => despesa.id !== despesaToDelete.id));
                 setModalMessage({ nome: 'Despesa', tipoSucesso: 'excluída' });
                 setModalVisible(true);
@@ -166,7 +210,7 @@ export default function ListagemDespesas() {
 
     const getCategoriaNome = (categoriaId: string) => {
         const categoria = categorias.find((cat) => cat.id === categoriaId);
-        return categoria ? categoria.nome : "Categoria desconhecida";
+        return categoria ? categoria.nome : "Categoria não selecionada";
     };
 
     const agruparDespesasPorMesEAno = (despesas: Despesas[]) => {

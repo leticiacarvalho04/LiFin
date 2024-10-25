@@ -4,7 +4,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Icon from 'react-native-vector-icons/Feather';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-
 import { RootStackParamList } from '../routes';
 
 // Defina o tipo da navegação
@@ -24,7 +23,7 @@ export function Navbar() {
         { key: 'Categorias', label: 'Painel de categorias', emoji: '🏷️' },
         { key: 'Orcamentos', label: 'Meus orçamentos', emoji: '💸' },
         { key: 'Metas', label: 'Minhas metas financeiras', emoji: '🎯' },
-        { key: 'Relatorios', label: 'Meus relatórios', emoji: '📊' }
+        { key: 'Relatorios', label: 'Meus relatórios', emoji: '📊' },
     ];    
 
     const toggleMenu = () => {
@@ -34,6 +33,14 @@ export function Navbar() {
             duration: 300,
             useNativeDriver: true,
         }).start();
+    };
+
+    const handleUser = () => {
+        navigation.navigate('PainelUsuario');
+    };
+
+    const handleLogout = () => {
+        navigation.navigate('Login');
     };
 
     return (
@@ -63,8 +70,7 @@ export function Navbar() {
                 {opcoes.map((opcao, index) => (
                     <TouchableOpacity
                         key={opcao.key}
-                        style={[
-                            styles.optionButton, 
+                        style={[styles.optionButton, 
                             index === 0 && { marginTop: 20 } // Aplica margem apenas ao primeiro item
                         ]}
                         onPress={() => {
@@ -83,6 +89,16 @@ export function Navbar() {
                         </View>
                     </TouchableOpacity>
                 ))}
+
+                <TouchableOpacity style={styles.perfil} onPress={handleUser}>
+                    <Icon name="user" size={24} color="#333" />
+                    <Text style={styles.optionText}>Meu Perfil</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.sair} onPress={handleLogout}>
+                    <Icon name="log-out" size={24} color="#333" />
+                    <Text style={styles.optionText}>Sair</Text>
+                </TouchableOpacity>
             </Animated.View>
         </LinearGradient>
     );
@@ -93,8 +109,6 @@ const styles = StyleSheet.create({
         height: 100,
         justifyContent: 'center',
         paddingHorizontal: 20,
-        borderBottomLeftRadius: 10,
-        borderBottomRightRadius: 10,
         zIndex: 1,
     },
     menuContainer: {
@@ -155,4 +169,20 @@ const styles = StyleSheet.create({
         color: '#333',
         paddingVertical: 10,
     },
+    perfil : {
+        position: 'absolute',
+        bottom: 100,
+        left: 20,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+    },
+    sair: {
+        position: 'absolute',
+        bottom: 40,
+        left: 20,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+    }
 });

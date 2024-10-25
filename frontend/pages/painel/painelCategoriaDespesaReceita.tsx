@@ -2,18 +2,17 @@ import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Layout from "../../components/layout";
 import { useState } from "react";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
-import ListagemReceitas from "./listagemReceita";
-import { useIsFocused } from "@react-navigation/native";
-import ListagemDespesas from "./ListagemDespesas";
+import ListagemCategoriasDespesas from "./listagemCategoriaDespesa";
+import ListagemCategoriasReceitas from "./listagemCategoriaReceitas";
+import Icon  from "react-native-vector-icons/Feather";
+import { NavigationProp, useNavigation } from "@react-navigation/native";
+import { RootStackParamList } from "../../routes";
 
-export default function PainelDespesasReceitas() {
+export default function PainelCategoriasDespesasReceitas() {
   const [selected, setSelected] = useState<'despesa' | 'receita'>('despesa');
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const initialValues = {
     nome: '',
-    valor: 0,
-    categoria: '',
-    data: '',
-    descricao: ''
   };
   const [painelValues, setPainelValues] = useState(initialValues);
 
@@ -27,6 +26,9 @@ export default function PainelDespesasReceitas() {
         contentContainerStyle={styles.contentContainer}
         scrollEnabled={true}
       >
+        <View style={styles.titulo}>
+          <Text style={styles.tituloText}>Minhas Categorias</Text>
+        </View>
         <View style={styles.toggleContainer}>
           <TouchableOpacity
             style={[
@@ -53,14 +55,25 @@ export default function PainelDespesasReceitas() {
 
         {selected === 'despesa' ? (
           <View style={styles.listagem}>
-            <ListagemDespesas />
+            <ListagemCategoriasDespesas />
           </View>
         ) : (
           <View style={styles.listagem}>
-            <ListagemReceitas />
+            <ListagemCategoriasReceitas />
           </View>
         )}
       </KeyboardAwareScrollView>
+
+      {selected === 'despesa' ? (
+      <TouchableOpacity onPress={() => navigation.navigate('CadastrarCategoriaDespesa')} style={styles.addButton}>
+        <Icon name='plus-circle' size={40} color="#000" />
+      </TouchableOpacity>
+      ) : (
+        <TouchableOpacity onPress={() => navigation.navigate('CadastrarCategoriaReceita')} style={styles.addButton}>
+            <Icon name='plus-circle' size={40} color="#000" />
+        </TouchableOpacity>
+    )}
+
     </Layout>
   );
 }
@@ -75,6 +88,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     width: '100%',
+  },
+  titulo: {
+    margin: '7%',
+    marginBottom: '10%',
+  },
+  tituloText: {
+    fontSize: 22,
+    fontWeight: "bold",
+    textAlign: 'center',
   },
   toggleContainer: {
     flexDirection: 'row',
@@ -117,5 +139,22 @@ const styles = StyleSheet.create({
     padding: 10,
     width: '100%',
     justifyContent: 'center',
+  },
+  addButton: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 3.84,
   },
 });

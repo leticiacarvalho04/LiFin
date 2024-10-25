@@ -1,57 +1,69 @@
 import React, { useEffect, useState } from 'react';
 import { Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Layout from '../../components/layout';
-import { NavigationProp, useNavigation } from '@react-navigation/native';
+import { NavigationProp, useNavigation, useIsFocused } from '@react-navigation/native';
 import { RootStackParamList } from '../../routes';
 import { Categoria } from '../../types/categoria';
 import axios from 'axios';
-import Icon from 'react-native-vector-icons/Feather'; // Importando o ícone
+import Icon from 'react-native-vector-icons/Feather';
 import { API_URL } from '../../api';
-import Swal from 'sweetalert2';
 import ModalSucesso from '../../components/modalSucesso';
 import ModalConfirmacaoDelete from '../../components/modalConfirmacaoDelete';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export default function PainelCategorias() {
+export default function ListagemCategoriasDespesas() {
   const initialValues: Categoria[] = [];
   const [categorias, setCategorias] = useState<Categoria[]>(initialValues);
-  const [isEditing, setIsEditing] = useState<number | null>(null); // Index da categoria sendo editada
+  const [isEditing, setIsEditing] = useState<number | null>(null);
   const [editedCategoria, setEditedCategoria] = useState<Categoria | null>(null);
-  const [modalVisible, setModalVisible] = useState(false); // Modal de sucesso
+  const [modalVisible, setModalVisible] = useState(false);
   const [modalMessage, setModalMessage] = useState({ nome: '', tipoSucesso: '' });
-  const [confirmDeleteVisible, setConfirmDeleteVisible] = useState(false); // Modal de confirmação de exclusão
+  const [confirmDeleteVisible, setConfirmDeleteVisible] = useState(false);
   const [categoriaToDelete, setCategoriaToDelete] = useState<Categoria | null>(null); 
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+  const isFocused = useIsFocused(); // Hook para verificar se a tela está em foco
 
+  // Função para buscar as categorias
+  const fetchCategorias = async () => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (!token) {
+        navigation.navigate('Login');
+        return;
+      }
+
+      const response = await axios.get(`${API_URL}/despesas/categorias`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const categoriasFirestore = response.data;
+      const storedCategoriasJSON = await AsyncStorage.getItem('categoriaDespesa');
+      const storedCategorias = storedCategoriasJSON ? JSON.parse(storedCategoriasJSON) : [];
+
+      if (JSON.stringify(categoriasFirestore) !== JSON.stringify(storedCategorias) || storedCategorias.length === 0) {
+        await AsyncStorage.setItem('categoriaDespesa', JSON.stringify(categoriasFirestore));
+        setCategorias(categoriasFirestore);
+      } else {
+        setCategorias(storedCategorias);
+      }
+    } catch (error) {
+      console.error("Erro ao buscar categorias:", error);
+      if ((error as any).response?.status === 401) {
+        navigation.navigate('Login');
+      }
+    }
+  };
+
+  // UseEffect para buscar categorias toda vez que a tela estiver em foco
   useEffect(() => {
-      const fetchCategorias = async () => {
-        try {
-            const response = await axios.get(`${API_URL}/categorias`);
-            const categoriasFirestore = response.data;
-
-            // Tenta recuperar categorias do AsyncStorage
-            const storedCategoriasJSON = await AsyncStorage.getItem('categorias');
-            const storedCategorias = storedCategoriasJSON ? JSON.parse(storedCategoriasJSON) : [];
-
-            // Se as categorias no Firestore forem diferentes das armazenadas ou se não houver registros
-            if (JSON.stringify(categoriasFirestore) !== JSON.stringify(storedCategorias) || storedCategorias.length === 0) {
-            // Atualiza o AsyncStorage e o estado
-            await AsyncStorage.setItem('categorias', JSON.stringify(categoriasFirestore));
-            setCategorias(categoriasFirestore);
-            } else {
-            // Se as categorias estiverem iguais, apenas as define do AsyncStorage
-            setCategorias(storedCategorias);
-            }
-        } catch (error) {
-            console.error("Erro ao buscar categorias:", error);
-        }
-    };
-    fetchCategorias();
-  }, []);
+    if (isFocused) {
+      fetchCategorias();
+    }
+  }, [isFocused]);
 
   const handleEdit = (index: number) => {
-    setIsEditing(index); // Define a edição
-    setEditedCategoria({ ...categorias[index] }); // Clona a categoria para edição
+    setIsEditing(index);
+    setEditedCategoria({ ...categorias[index] });
   };
 
   const handleInputChange = (field: keyof Categoria, value: string) => {
@@ -66,14 +78,20 @@ export default function PainelCategorias() {
   const handleSave = async () => {
     if (editedCategoria && isEditing !== null) {
       try {
-        await axios.put(`${API_URL}/atualizar/categoria/${editedCategoria.id}`, editedCategoria);
+        const token = await AsyncStorage.getItem('token');
+          if (!token) {
+            navigation.navigate('Login');
+            return;
+        }
+        await axios.put(`${API_URL}/atualizar/despesa/categoria/${editedCategoria.id}`, editedCategoria, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         const updatedCategorias = [...categorias];
         updatedCategorias[isEditing] = editedCategoria;
         setCategorias(updatedCategorias);
         setIsEditing(null);
         setEditedCategoria(null);
 
-        // Exibir modal de sucesso após edição
         setModalMessage({ nome: 'Categoria', tipoSucesso: 'editada' });
         setModalVisible(true);
       } catch (error) {
@@ -95,7 +113,14 @@ export default function PainelCategorias() {
   const confirmDelete = async () => {
       if (categoriaToDelete) {
           try {
-              await axios.delete(`${API_URL}/excluir/categoria/${categoriaToDelete.id}`);
+              const token = await AsyncStorage.getItem('token');
+              if (!token) {
+                navigation.navigate('Login');
+                return;
+              }
+              await axios.delete(`${API_URL}/excluir/despesa/categoria/${categoriaToDelete.id}`, {
+                headers: { Authorization: `Bearer ${token}` },
+              });
               setCategorias(prev => prev.filter(categoria => categoria.id !== categoriaToDelete.id));
               setModalMessage({ nome: 'Categoria', tipoSucesso: 'excluída' });
               setModalVisible(true); 
@@ -117,11 +142,7 @@ export default function PainelCategorias() {
   };
 
   return (
-    <Layout>
       <View style={styles.container}>
-        <View style={styles.titulo}>
-          <Text style={styles.tituloText}>Minhas Categorias</Text>
-        </View>
         {categorias.map((categoria: Categoria, index: number) => (
           <View key={index} style={styles.card}>
             {isEditing === index ? (
@@ -159,9 +180,6 @@ export default function PainelCategorias() {
             )}
           </View>
         ))}
-        <TouchableOpacity onPress={() => navigation.navigate('CadastrarCategoria')} style={styles.addButton}>
-          <Icon name='plus-circle' size={40} color="#000" />
-        </TouchableOpacity>
 
         <ModalSucesso 
           nome="Despesa"
@@ -176,7 +194,6 @@ export default function PainelCategorias() {
           nome={categoriaToDelete ? categoriaToDelete.nome : ''} 
         />
       </View>
-    </Layout>
   );
 }
 

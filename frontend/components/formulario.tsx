@@ -8,6 +8,8 @@ import { Categoria } from '../types/categoria';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_URL } from '../api';
+import { NavigationProp, useNavigation } from '@react-navigation/native';
+import { RootStackParamList } from '../routes';
 
 interface PropsFormulario {
   fields: string[];
@@ -15,47 +17,19 @@ interface PropsFormulario {
   onInputChange?: (field: string, value: any) => void;
   onReset?: () => void;
   errors?: { [key: string]: string };
-  btn: { nome: string; tipoSucesso: string; rota: string; formValues: any };
+  btn: { nome: string; tipoSucesso: string; rota: string; formValues: any; onRedirect ?: string };
+  categorias?: Categoria[]; // Mantendo como opcional
 }
 
 export default function Formulario(props: PropsFormulario) {
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [loadingCategorias, setLoadingCategorias] = useState(false);
   const inputRefs = useRef<{ [key: string]: any }>({});
   const [isEmpty, setIsEmpty] = useState<{ [key: string]: boolean }>({});
-  
-  const { fields, values, onInputChange, onReset, btn } = props;
+  const [userId, setUserId] = useState<string | null>(null);
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
 
-  useEffect(() => {
-    const fetchCategorias = async () => {
-      setLoadingCategorias(true);
-      try {
-        const response = await axios.get(`${API_URL}/categorias`);
-        const categoriasFirestore = response.data;
-
-        // Tenta recuperar categorias do AsyncStorage
-        const storedCategoriasJSON = await AsyncStorage.getItem('categorias');
-        const storedCategorias = storedCategoriasJSON ? JSON.parse(storedCategoriasJSON) : [];
-
-        // Se as categorias no Firestore forem diferentes das armazenadas ou se não houver registros
-        if (JSON.stringify(categoriasFirestore) !== JSON.stringify(storedCategorias) || storedCategorias.length === 0) {
-          // Atualiza o AsyncStorage e o estado
-          await AsyncStorage.setItem('categorias', JSON.stringify(categoriasFirestore));
-          setCategorias(categoriasFirestore);
-        } else {
-          // Se as categorias estiverem iguais, apenas as define do AsyncStorage
-          setCategorias(storedCategorias);
-        }
-      } catch (error) {
-        console.error('Erro ao buscar categorias:', error);
-      } finally {
-        setLoadingCategorias(false);
-      }
-    };
-
-    fetchCategorias();
-  }, []);
+  const { fields, values, onInputChange, onReset, btn, categorias } = props;
 
   const validateFields = () => {
     const emptyFields = fields.reduce((acc, field) => {
@@ -135,9 +109,13 @@ export default function Formulario(props: PropsFormulario) {
                   style={styles.input}
                 >
                   <Picker.Item label="Selecione uma categoria" value="" />
-                  {categorias.map((categoria) => (
-                    <Picker.Item key={categoria.id} label={categoria.nome} value={categoria.id} />
-                  ))}
+                  {categorias && categorias.length > 0 ? (
+                    categorias.map((categoria) => (
+                      <Picker.Item key={categoria.id} label={categoria.nome} value={categoria.id} />
+                    ))
+                  ) : (
+                    <Picker.Item label="Nenhuma categoria disponível" value="" />
+                  )}
                 </Picker>
               )}
             </>
@@ -149,6 +127,7 @@ export default function Formulario(props: PropsFormulario) {
               value={values[field]}
               onChangeText={(text) => handleInputChange(field, text)}
               returnKeyType={index < fields.length - 1 ? 'next' : 'done'}
+              keyboardType={field === 'Valor' ? 'numeric' : 'default'} // Apenas para o campo Valor
             />
           )}
           {isEmpty[field] && <Text style={styles.errorText}>Campo obrigatório</Text>}
@@ -162,6 +141,8 @@ export default function Formulario(props: PropsFormulario) {
         rota={btn.rota}
         formValues={values}
         onPress={validateFields}
+        onRedirect={btn.onRedirect}
+        categoria={values.Categoria}
       />
     </KeyboardAwareScrollView>
   );
