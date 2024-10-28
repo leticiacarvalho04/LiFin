@@ -7,6 +7,7 @@ import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import { API_URL } from "../../api";
+import * as LocalAuthentication from 'expo-local-authentication'; // Importar para autenticação biométrica
 
 export default function Login() {
     const [email, setEmail] = useState("");
@@ -22,7 +23,7 @@ export default function Login() {
     useEffect(() => {
         const checkToken = async () => {
             try {
-                const token = await AsyncStorage.getItem("token");
+                const token = await AsyncStorage.getItem("tokenId");
                 if (token) {
                     // Se o token existir, pode-se navegar diretamente para a home ou outro fluxo desejado
                     navigation.navigate("Home");
@@ -74,6 +75,77 @@ export default function Login() {
         return <ActivityIndicator size="large" color="#0000ff" />;
     }
 
+    const handleAuthentication = async () => {
+        const isBiometricEnabled = await AsyncStorage.getItem("biometricEnabled") === 'true';
+    
+        if (!isBiometricEnabled) {
+            return Alert.alert('Biometria', 'Autenticação biométrica não habilitada. Faça login normalmente.');
+        }
+    
+        const auth = await LocalAuthentication.authenticateAsync({
+            promptMessage: 'Login com Biometria',
+            fallbackLabel: 'Biometria não reconhecida',
+        });
+    
+        if (auth.success) {
+            try {
+                // Recupera o UID do AsyncStorage
+                const userId = await AsyncStorage.getItem('userId');
+                if (!userId) throw new Error("UID não encontrado.");
+                console.log("UID do usuário autenticado:", userId);
+
+                const email = await AsyncStorage.getItem('userEmail');
+    
+                // Realiza uma chamada à API para obter o token após a autenticação biométrica
+                const response = await fetch(`${API_URL}/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email,
+                        uid: userId, // ou outros dados necessários para o login
+                    }),
+                });
+                console.log("Resposta da API:", response);
+    
+                if (!response.ok) {
+                    throw new Error("Falha ao fazer login.");
+                }
+    
+                const data = await response.json();
+                const token = data.token; // Aqui você pega o token retornado pelo backend
+    
+                // Armazena o token no AsyncStorage
+                await AsyncStorage.setItem('token', token);
+                console.log("Token do usuário autenticado:", token);
+    
+                // Use o UID como necessário
+                console.log("UID do usuário autenticado:", userId);
+                navigation.navigate("Home");
+                Alert.alert("Login bem-sucedido com biometria!");
+            } catch (error) {
+                console.error("Erro ao autenticar com biometria:", error);
+                Alert.alert("Erro ao autenticar com biometria.");
+            }
+        } else {
+            Alert.alert('Login', 'Falha na autenticação biométrica');
+        }
+    };    
+
+    useEffect(() => {
+        verifyAvailableAuthentication();
+    }, []);
+
+    const verifyAvailableAuthentication = async () => {
+        const compatible = await LocalAuthentication.hasHardwareAsync();
+        const isEnrolled = await LocalAuthentication.isEnrolledAsync();
+        
+        if (!compatible || !isEnrolled) {
+            Alert.alert("Autenticação biométrica não disponível ou não cadastrada.");
+        }
+    }; 
+
     return (
         <View style={styles.container}>
             <LinearGradient
@@ -107,6 +179,10 @@ export default function Login() {
                 ) : (
                     <Text style={styles.buttonText}>Login</Text>
                 )}
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.biometricButton} onPress={handleAuthentication}>
+                <Text style={styles.biometricText}>Login com Biometria</Text>
             </TouchableOpacity>
 
             <View style={styles.link}>
@@ -160,6 +236,20 @@ const styles = StyleSheet.create({
         marginTop: 12,
         marginBottom: 25,
         width: '40%',
+    },
+    biometricButton: {
+        backgroundColor: '#6b6bbd',
+        paddingVertical: 15,
+        borderRadius: 10,
+        alignItems: 'center',
+        marginTop: 12,
+        marginBottom: 25,
+        width: '40%',
+    },
+    biometricText: {
+        color: '#fff',
+        fontSize: 15,
+        fontFamily: 'MontserratAlternates_600SemiBold',
     },
     buttonText: {
         color: '#fff',

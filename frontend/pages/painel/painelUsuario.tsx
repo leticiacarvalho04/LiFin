@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, TouchableOpacity, TextInput } from "react-native";
+import { StyleSheet, Text, View, TouchableOpacity, TextInput, Alert } from "react-native";
 import Layout from "../../components/layout";
 import { NavigationProp, useNavigation } from "@react-navigation/native";
 import { useEffect, useState } from "react";
@@ -8,9 +8,9 @@ import { API_URL } from "../../api";
 import { RootStackParamList } from "../../routes";
 import Icon from "react-native-vector-icons/FontAwesome6"; 
 import IconFeather from "react-native-vector-icons/Feather"; 
-import Botoes from "../../components/botoesEdicaoExclusao";
 import ModalSucesso from "../../components/modalSucesso";
 import React from "react";
+import FingerprintScanner from 'react-native-fingerprint-scanner';
 
 export default function PainelUsuario() {
     const [userId, setUserId] = useState<string | null>(null);
@@ -26,17 +26,35 @@ export default function PainelUsuario() {
 
     const buscarUsuario = async () => {
         try {
-            const token = await AsyncStorage.getItem('token');
+            const token = await AsyncStorage.getItem("token");
+            const userId = await AsyncStorage.getItem("userId");
+    
+            console.log('Token:', token); // Verifique se o token está realmente aqui
+            console.log('User ID:', userId); // Verifique se o ID do usuário está realmente aqui
+    
             if (!token) {
                 navigation.navigate('Login');
                 return;
             }
     
-            const response = await axios.get(`${API_URL}/usuario`, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
+            // Verifica se o userId está presente
+            if (!userId) {
+                console.error("ID do usuário não encontrado.");
+                navigation.navigate('Login');
+                return;
+            }
     
-            setUserName(response.data.nome); 
+            const response = await axios.get(`${API_URL}/usuario/${userId}`, { // Passa o userId na URL
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            console.log(response.data)
+    
+            // Armazena os dados do usuário no estado
+            setUserId(userId);
+            setUserName(response.data.nome);
             setUserEmail(response.data.email);
             setUserPassword(response.data.senha);
         } catch (error) {
@@ -44,21 +62,26 @@ export default function PainelUsuario() {
         }
     };    
 
-    useEffect(() => {
-        const fetchUserId = async () => {
-            try {
-                const storedUserId = await AsyncStorage.getItem("userId");
-                if (storedUserId) {
-                    setUserId(storedUserId);
-                }
-            } catch (error) {
-                console.error("Erro ao buscar o ID do usuário", error);
+    const autenticarBiometria = async () => {
+        try {
+            const isAvailable = await FingerprintScanner.isSensorAvailable();
+            if (isAvailable) {
+                await FingerprintScanner.authenticate({ description: 'Autentique-se para acessar o painel do usuário' });
+                buscarUsuario();
+            } else {
+                Alert.alert("Erro", "Sensor biométrico não disponível");
             }
-        };
+        } catch (error) {
+            console.error("Erro na autenticação biométrica", error);
+            Alert.alert("Erro", "Falha na autenticação biométrica");
+        } finally {
+            FingerprintScanner.release();
+        }
+    };
 
+    useEffect(() => {
         buscarUsuario();
-        fetchUserId();
-    }, []);
+    }, []);        
 
     const validateFields = () => {
         const emptyFields = {
@@ -88,9 +111,11 @@ export default function PainelUsuario() {
                 }
                 const updatedUser = { nome: userName, email: userEmail, senha: userPassword };
                 
-                await axios.put(`${API_URL}/atualizar/usuario`, updatedUser, {
-                    headers: { Authorization: `Bearer ${token}` },
-                });
+                if(!validateFields()) {
+                    await axios.put(`${API_URL}/atualizar/usuario`, updatedUser, {
+                        headers: { Authorization: `Bearer ${token}` },
+                    });
+                }
 
                 setIsEditing(false);
                 setModalVisible(true);

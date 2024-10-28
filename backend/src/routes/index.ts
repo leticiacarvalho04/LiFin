@@ -19,7 +19,7 @@ router.post("/cadastro/receita/categoria", autenticarToken, CategoriaReceitaCont
 router.post("/cadastro/despesa", autenticarToken, DespesaController.cadastrarDespesa);
 router.post("/cadastro/receita", autenticarToken, ReceitaController.cadastrarReceita);
 
-router.get("/usuario", autenticarToken, UsuarioController.listarUsuarioPorId);
+router.get("/usuario/:id", autenticarToken, UsuarioController.listarUsuarioPorId);
 router.get("/despesas/categorias", autenticarToken, CategoriaDespesaController.listarCategoria);
 router.get("/receitas/categorias", autenticarToken, CategoriaReceitaController.listarCategoria);
 router.get("/despesas", autenticarToken, DespesaController.listarDespesas);

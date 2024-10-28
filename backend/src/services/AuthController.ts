@@ -11,11 +11,13 @@ export default class AuthController {
         try {
             // Verifica se o usuário existe
             const userRecord = await auth.getUserByEmail(email);
+            console.log("Usuário encontrado:", userRecord);
 
             // Caso a autenticação seja bem-sucedida, você pode criar um token JWT
             const token = jwt.sign({ uid: userRecord.uid, email: userRecord.email }, JWT_SECRET, {
                 expiresIn: "1h",
             });
+            console.log(token);
 
             // Retornando o ID do usuário e o token
             return res.status(200).json({ uid: userRecord.uid, token });
