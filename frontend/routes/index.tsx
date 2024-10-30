@@ -14,6 +14,8 @@ import PainelCategoriasDespesasReceitas from '../pages/painel/painelCategoriaDes
 import CadastroDespesaCategoria from '../pages/cadastros/cadastroDespesaCategorias';
 import CadastroReceitaCategoria from '../pages/cadastros/cadastroReceitaCategorias';
 import PainelDespesasReceitas from '../pages/painel/PainelDespesasReceitas';
+import CadastroGastosFixos from '../pages/cadastros/cadastroGastosFixos';
+import PainelGastosFixos from '../pages/painel/painelGastosFixos';
 
 export type RootStackParamList = {
   Login: undefined;
@@ -26,6 +28,8 @@ export type RootStackParamList = {
   Metas: undefined;
   Relatorios: undefined;
   Orcamentos: undefined;
+  GastosFixos: undefined;
+  CadastrarGastosFixos: undefined;
   CadastrarCategoriaDespesa: undefined;
   CadastrarCategoriaReceita: undefined;
 };
@@ -44,9 +48,11 @@ export default function Routes() {
       <Stack.Screen name="Categorias" component={PainelCategoriasDespesasReceitas} />
       <Stack.Screen name="CadastrarCategoriaDespesa" component={CadastroDespesaCategoria} />
       <Stack.Screen name="CadastrarCategoriaReceita" component={CadastroReceitaCategoria} />
+      <Stack.Screen name="CadastrarGastosFixos" component={CadastroGastosFixos} />
       <Stack.Screen name="Metas" component={PainelMetas} />
       <Stack.Screen name="Relatorios" component={PainelRelatorios} />
       <Stack.Screen name="Orcamentos" component={PainelOrcamentos} />
+      <Stack.Screen name="GastosFixos" component={PainelGastosFixos} />
     </Stack.Navigator>
   );
 }

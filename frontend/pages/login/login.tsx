@@ -25,14 +25,12 @@ export default function Login() {
             try {
                 const token = await AsyncStorage.getItem("tokenId");
                 if (token) {
-                    // Se o token existir, pode-se navegar diretamente para a home ou outro fluxo desejado
                     navigation.navigate("Home");
                 }
             } catch (error) {
                 console.error("Erro ao verificar o token:", error);
             }
         };
-
         checkToken();
     }, []);
 
@@ -54,7 +52,6 @@ export default function Login() {
                 throw new Error("Usuário ou token não encontrado na resposta.");
             }
 
-            // Armazenando o token e o ID do usuário no AsyncStorage
             await AsyncStorage.setItem("token", token);
             await AsyncStorage.setItem("userId", userId);
     
@@ -71,10 +68,6 @@ export default function Login() {
         }
     };
 
-    if (!fontsLoaded) {
-        return <ActivityIndicator size="large" color="#0000ff" />;
-    }
-
     const handleAuthentication = async () => {
         const isBiometricEnabled = await AsyncStorage.getItem("biometricEnabled") === 'true';
     
@@ -89,14 +82,11 @@ export default function Login() {
     
         if (auth.success) {
             try {
-                // Recupera o UID do AsyncStorage
                 const userId = await AsyncStorage.getItem('userId');
                 if (!userId) throw new Error("UID não encontrado.");
-                console.log("UID do usuário autenticado:", userId);
-
+                
                 const email = await AsyncStorage.getItem('userEmail');
     
-                // Realiza uma chamada à API para obter o token após a autenticação biométrica
                 const response = await fetch(`${API_URL}/login`, {
                     method: 'POST',
                     headers: {
@@ -104,24 +94,18 @@ export default function Login() {
                     },
                     body: JSON.stringify({
                         email,
-                        uid: userId, // ou outros dados necessários para o login
+                        uid: userId,
                     }),
                 });
-                console.log("Resposta da API:", response);
     
                 if (!response.ok) {
                     throw new Error("Falha ao fazer login.");
                 }
     
                 const data = await response.json();
-                const token = data.token; // Aqui você pega o token retornado pelo backend
+                const token = data.token;
     
-                // Armazena o token no AsyncStorage
                 await AsyncStorage.setItem('token', token);
-                console.log("Token do usuário autenticado:", token);
-    
-                // Use o UID como necessário
-                console.log("UID do usuário autenticado:", userId);
                 navigation.navigate("Home");
                 Alert.alert("Login bem-sucedido com biometria!");
             } catch (error) {
@@ -144,7 +128,11 @@ export default function Login() {
         if (!compatible || !isEnrolled) {
             Alert.alert("Autenticação biométrica não disponível ou não cadastrada.");
         }
-    }; 
+    };
+
+    if (!fontsLoaded) {
+        return <ActivityIndicator size="large" color="#0000ff" />;
+    }
 
     return (
         <View style={styles.container}>
