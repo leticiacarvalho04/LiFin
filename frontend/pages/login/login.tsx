@@ -69,69 +69,56 @@ export default function Login() {
     };
 
     const handleAuthentication = async () => {
-        const isBiometricEnabled = await AsyncStorage.getItem("biometricEnabled") === 'true';
+        try {
+            const isBiometricEnabled = (await AsyncStorage.getItem("biometricEnabled")) === "true";
     
-        if (!isBiometricEnabled) {
-            return Alert.alert('Biometria', 'Autenticação biométrica não habilitada. Faça login normalmente.');
-        }
-    
-        const auth = await LocalAuthentication.authenticateAsync({
-            promptMessage: 'Login com Biometria',
-            fallbackLabel: 'Biometria não reconhecida',
-        });
-    
-        if (auth.success) {
-            try {
-                const userId = await AsyncStorage.getItem('userId');
-                if (!userId) throw new Error("UID não encontrado.");
-                
-                const email = await AsyncStorage.getItem('userEmail');
-    
-                const response = await fetch(`${API_URL}/login`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        email,
-                        uid: userId,
-                    }),
-                });
-    
-                if (!response.ok) {
-                    throw new Error("Falha ao fazer login.");
-                }
-    
-                const data = await response.json();
-                const token = data.token;
-    
-                await AsyncStorage.setItem('token', token);
-                navigation.navigate("Home");
-                Alert.alert("Login bem-sucedido com biometria!");
-            } catch (error) {
-                console.error("Erro ao autenticar com biometria:", error);
-                Alert.alert("Erro ao autenticar com biometria.");
+            if (!isBiometricEnabled) {
+                return Alert.alert("Biometria", "Autenticação biométrica não está habilitada. Faça login manualmente.");
             }
-        } else {
-            Alert.alert('Login', 'Falha na autenticação biométrica');
+    
+            const result = await LocalAuthentication.authenticateAsync({
+                promptMessage: "Autenticar com Biometria",
+                cancelLabel: "Cancelar",
+                fallbackLabel: "Use senha",
+            });
+    
+            if (result.success) {
+                Alert.alert("Sucesso", "Autenticação biométrica concluída!");
+                navigation.navigate("Home");
+            } else {
+                Alert.alert("Erro", "Autenticação biométrica falhou. Tente novamente.");
+            }
+        } catch (error) {
+            console.error("Erro ao autenticar com biometria:", error);
+            Alert.alert("Erro", "Houve um problema ao autenticar com biometria.");
         }
-    };    
+    };       
 
     useEffect(() => {
         verifyAvailableAuthentication();
     }, []);
 
     const verifyAvailableAuthentication = async () => {
-        const compatible = await LocalAuthentication.hasHardwareAsync();
-        const isEnrolled = await LocalAuthentication.isEnrolledAsync();
-        
-        if (!compatible || !isEnrolled) {
-            Alert.alert("Autenticação biométrica não disponível ou não cadastrada.");
+        try {
+            const compatible = await LocalAuthentication.hasHardwareAsync();
+            const isEnrolled = await LocalAuthentication.isEnrolledAsync();
+    
+            if (!compatible) {
+                Alert.alert("Erro", "Este dispositivo não suporta autenticação biométrica.");
+                return;
+            }
+    
+            if (!isEnrolled) {
+                Alert.alert("Erro", "Nenhuma biometria cadastrada. Configure no sistema do dispositivo.");
+            }
+        } catch (error) {
+            console.error("Erro ao verificar autenticação:", error);
+            Alert.alert("Erro ao verificar biometria:", "Tente novamente mais tarde.");
         }
-    };
+    };    
 
     if (!fontsLoaded) {
-        return <ActivityIndicator size="large" color="#0000ff" />;
+        return <ActivityIndicator color="#0000ff" />;
     }
 
     return (
