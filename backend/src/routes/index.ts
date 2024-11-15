@@ -9,6 +9,7 @@ import CategoriaDespesaController from "../controllers/controllerDespesaCategori
 import CategoriaReceitaController from "../controllers/controllerReceitaCategoria";
 import { ControllerGastosFixos } from '../controllers/controllerGastosFixos';
 import { ControllerOrcamento } from '../controllers/controllerOrcamento';
+import ControllerMeta from "../controllers/controllerMeta";
 
 const router = Router();
 
@@ -21,6 +22,7 @@ router.post("/cadastro/receita/categoria", autenticarToken, CategoriaReceitaCont
 router.post("/cadastro/despesa", autenticarToken, DespesaController.cadastrarDespesa);
 router.post("/cadastro/receita", autenticarToken, ReceitaController.cadastrarReceita);
 router.post("/cadastro/gastoFixo", autenticarToken, ControllerGastosFixos.cadastrarGastosFixos);
+router.post("/cadastro/meta", autenticarToken, ControllerMeta.cadastrarMeta);
 router.post("/cadastro/orcamento", autenticarToken, ControllerOrcamento.cadastrarOrcamento);
 
 router.get("/usuario/:id", autenticarToken, UsuarioController.listarUsuarioPorId);
@@ -29,6 +31,7 @@ router.get("/receitas/categorias", autenticarToken, CategoriaReceitaController.l
 router.get("/despesas", autenticarToken, DespesaController.listarDespesas);
 router.get("/receitas", autenticarToken, ReceitaController.listarReceita);
 router.get("/gastos", autenticarToken, ControllerGastosFixos.listarGastosFixos);
+router.get("/metas", autenticarToken, ControllerMeta.listarMetas);
 router.get("/orcamentos", autenticarToken, ControllerOrcamento.listarOrcamento);
 
 router.put("/atualizar/usuario", autenticarToken, UsuarioController.atualizarUsuario);
@@ -37,6 +40,7 @@ router.put("/atualizar/receita/categoria/:id", autenticarToken, CategoriaReceita
 router.put("/atualizar/despesa/:id", autenticarToken, DespesaController.atualizarDespesa);
 router.put("/atualizar/receita/:id", autenticarToken, ReceitaController.atualizarReceita);
 router.put("/atualizar/gastoFixo/:id", autenticarToken, ControllerGastosFixos.atualizarGastosFixos);
+router.put("/atualizar/meta/:id", autenticarToken, ControllerMeta.atualizarMeta);
 
 router.delete("/excluir/usuario", autenticarToken, UsuarioController.deletarUsuario);
 router.delete("/excluir/despesa/categoria/:id", autenticarToken, CategoriaDespesaController.excluirCategoria);
@@ -44,5 +48,6 @@ router.delete("/excluir/receita/categoria/:id", autenticarToken, CategoriaReceit
 router.delete("/excluir/despesa/:id", autenticarToken, DespesaController.deletarDespesa);
 router.delete("/excluir/receita/:id", autenticarToken, ReceitaController.deletarReceita);
 router.delete("/excluir/gastoFixo/:id", autenticarToken, ControllerGastosFixos.deletarGastosFixos);
+router.delete("/excluir/meta/:id", autenticarToken, ControllerMeta.deletarMeta);
 
 export default router;

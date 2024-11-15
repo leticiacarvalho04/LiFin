@@ -6,7 +6,6 @@ import { Categoria } from "../../types/categoria";
 import { API_URL } from "../../api";
 import Dropdown from "../../components/dropdown";
 import Icon from "react-native-vector-icons/Feather";
-import Swal from "sweetalert2";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Picker } from "@react-native-picker/picker";
 import ModalSucesso from "../../components/modalSucesso";
