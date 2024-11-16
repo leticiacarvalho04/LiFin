@@ -79,24 +79,39 @@ export default class ControllerMeta {
         }
     }
 
-    static async atualizarMeta(req: AuthenticatedRequest, res: Response){
+    static async atualizarMeta(req: AuthenticatedRequest, res: Response) {
         try {
             const { id } = req.params;
             const dados: Meta = req.body;
-
+    
             // Verifica se o usuário está autenticado
             if (!req.usuarioAutenticado) {
                 return res.status(401).json({ erro: "Usuário não autenticado" });
             }
-
+    
             const meta = await colecaoMetas.doc(id).get();
             if (!meta.exists) {
                 return res.status(404).json({ erro: "Meta não encontrada" });
             }
-
-            await colecaoMetas.doc(id).update({ ...dados });
-
-            return res.status(200).json({ id, ...dados });
+    
+            // Validar e ajustar o formato da data, se necessário
+            if (dados.data && !/\d{2}-\d{2}-\d{4}/.test(dados.data)) {
+                return res.status(400).json({ erro: "Formato de data inválido. Use DD-MM-AAAA." });
+            }
+    
+            // Se `dados.data` estiver ausente, manter o valor existente
+            const metaAtual = meta.data();
+            const dataAtualizada = dados.data || metaAtual?.data;
+    
+            // Atualizar o documento com os dados ajustados
+            const dadosAtualizados = {
+                ...dados,
+                data: dataAtualizada,
+            };
+    
+            await colecaoMetas.doc(id).update(dadosAtualizados);
+    
+            return res.status(200).json({ id, ...dadosAtualizados });
         } catch (erro) {
             return res.status(500).json({ erro: "Falha ao atualizar gastos fixos" });
         }
