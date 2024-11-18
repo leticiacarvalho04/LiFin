@@ -1,35 +1,44 @@
 import React, { useState } from 'react';
-import { View, TouchableOpacity, Text, Animated, Dimensions, StyleSheet, StatusBar } from "react-native";
+import { View, TouchableOpacity, Text, Animated, Dimensions, StyleSheet, StatusBar, Image } from "react-native";
 import { LinearGradient } from 'expo-linear-gradient';
 import Icon from 'react-native-vector-icons/Feather';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../routes';
 
+// Importação das imagens
+import homeIcon from '../assets/homeicon.png';
+import pencilIcon from '../assets/pencil-dollar.png';
+import folderIcon from '../assets/folder-open.png';
+import businessPlanIcon from '../assets/businessplan.png';
+import categoryIcon from '../assets/category.png';
+import reportMoneyIcon from '../assets/report-money.png';
+import reportAnalytics from '../assets/report-analytics.png';
+
 // Defina o tipo da navegação
 type NavbarProps = StackNavigationProp<RootStackParamList, keyof RootStackParamList>;
 
-const { width, height } = Dimensions.get('screen'); // Obtém a altura total da tela, incluindo a área da barra de status
+const { width, height } = Dimensions.get('screen');
 
 export function Navbar() {
     const navigation = useNavigation<NavbarProps>();
     const [menuVisible, setMenuVisible] = useState(false);
-    const slideAnim = useState(new Animated.Value(-width * 0.75))[0]; // Posição inicial fora da tela
+    const slideAnim = useState(new Animated.Value(-width * 0.75))[0];
 
     const opcoes = [
-        { key: 'Home', label: 'Início', emoji: '🏠' },
-        { key: 'CadastroDespesasReceitas', label: 'Anotar despesas e receitas', emoji: '📝' },
-        { key: 'PainelDespesasReceitas', label: 'Painel de despesas e receitas', emoji: '🗃' },
-        { key: 'Categorias', label: 'Painel de categorias', emoji: '🏷️' },
-        { key: 'Orcamentos', label: 'Meus orçamentos', emoji: '💸' },
-        { key: 'Metas', label: 'Minhas metas financeiras', emoji: '🎯' },
-        { key: 'Relatorios', label: 'Meus relatórios', emoji: '📊' },
+        { key: 'Home', label: 'Início', icon: homeIcon },
+        { key: 'CadastroDespesasReceitas', label: 'Anotar despesas e receitas', icon: pencilIcon },
+        { key: 'PainelDespesasReceitas', label: 'Painel de despesas e receitas', icon: folderIcon },
+        { key: 'Categorias', label: 'Painel de categorias', icon: categoryIcon },
+        { key: 'Orcamentos', label: 'Meus orçamentos', icon: reportAnalytics },
+        { key: 'Metas', label: 'Minhas metas financeiras', icon: reportMoneyIcon },
+        { key: 'GastosFixos', label: 'Painel de gastos fixos', icon: businessPlanIcon },
     ];    
 
     const toggleMenu = () => {
         setMenuVisible(!menuVisible);
         Animated.timing(slideAnim, {
-            toValue: menuVisible ? -width * 0.75 : 0, // Slide para dentro ou para fora
+            toValue: menuVisible ? -width * 0.75 : 0,
             duration: 300,
             useNativeDriver: true,
         }).start();
@@ -47,10 +56,9 @@ export function Navbar() {
         <LinearGradient
             colors={['#a64ac9', '#6b6bbd', '#3d9be9', '#41e8d1']}
             start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}  // Gradiente na diagonal
+            end={{ x: 1, y: 1 }}
             style={styles.navbar}
         >
-            {/* Menu Hamburguer estará na sidebar */}
             {!menuVisible && (
                 <View style={styles.menuContainer}>
                     <TouchableOpacity style={styles.menuIcon} onPress={toggleMenu}>
@@ -59,32 +67,29 @@ export function Navbar() {
                 </View>
             )}
 
-            {/* Sidebar com opções */}
             <Animated.View style={[styles.sidebar, { transform: [{ translateX: slideAnim }] }]}>
-                {/* Ícone para fechar o menu */}
                 <TouchableOpacity onPress={toggleMenu} style={styles.closeButton}>
                     <Icon name="x" size={28} color="black" />
                 </TouchableOpacity>
 
-                {/* As opções do menu */}
                 {opcoes.map((opcao, index) => (
                     <TouchableOpacity
                         key={opcao.key}
                         style={[styles.optionButton, 
-                            index === 0 && { marginTop: 20 } // Aplica margem apenas ao primeiro item
+                            index === 0 && { marginTop: 20 }
                         ]}
                         onPress={() => {
                             navigation.navigate(opcao.key as keyof RootStackParamList);
-                            setMenuVisible(false); // Fecha o menu ao navegar
+                            setMenuVisible(false);
                             Animated.timing(slideAnim, {
-                                toValue: -width * 0.75, // Recolher menu após navegação
+                                toValue: -width * 0.75,
                                 duration: 300,
                                 useNativeDriver: true,
                             }).start();
                         }}
                     >
                         <View style={styles.linhas}>
-                            <Text style={styles.optionEmoji}>{opcao.emoji}</Text>
+                            <Image source={opcao.icon} style={styles.icon} />
                             <Text style={styles.optionText}>{opcao.label}</Text>
                         </View>
                     </TouchableOpacity>
@@ -129,16 +134,13 @@ const styles = StyleSheet.create({
         position: 'absolute',
         top: 0,
         left: 0,
-        width: width * 0.65, // Sidebar cobrindo 65% da largura da tela
-        height: height, // Sidebar cobrindo 100% da altura da tela
+        width: width * 0.65,
+        height: height,
         padding: 20,
-        paddingTop: StatusBar.currentHeight || 20, // Espaço para a barra de status
+        paddingTop: StatusBar.currentHeight || 20,
         zIndex: 2,
         shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
+        shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.25,
         shadowRadius: 3.84,
         elevation: 5,
@@ -160,8 +162,9 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         width: '100%',
     },
-    optionEmoji: {
-        fontSize: 24, // Ajuste o tamanho do emoji conforme necessário
+    icon: {
+        width: 24,
+        height: 24,
         marginRight: 10,
     },
     optionText: {
@@ -169,7 +172,7 @@ const styles = StyleSheet.create({
         color: '#333',
         paddingVertical: 10,
     },
-    perfil : {
+    perfil: {
         position: 'absolute',
         bottom: 100,
         left: 20,

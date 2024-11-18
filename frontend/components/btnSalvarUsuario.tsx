@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { TouchableOpacity, View, Text, StyleSheet } from 'react-native';
 import ModalSucesso from './modalSucesso';
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import { API_URL } from '../api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface Props {
   nome: string;
@@ -10,36 +11,49 @@ interface Props {
   onReset?: () => void;
   rota: string;
   formValues: any;
-  onPress?: () => boolean; // Função de validação deve retornar um booleano
-  onRedirect ?: () => void;
+  onPress?: () => void;
+  onRedirect?: () => void;
 }
 
 export default function BtnSalvarUsuario(props: Props) {
   const [modalVisible, setModalVisible] = useState(false);
 
   const handleSubmit = async () => {
-    setModalVisible(true);
     const dataToSend = {
       nome: props.formValues.Nome,
-      ...(props.formValues.Categoria && { categoriaId: props.formValues.Categoria }),
-      ...(props.formValues.Valor && { valor: props.formValues.Valor }),
-      ...(props.formValues.Data && { data: props.formValues.Data }), // Data formatada
-      ...(props.formValues.Descricao && { descricao: props.formValues.Descricao }),
-      ...(props.formValues.Email && { email: props.formValues.Email }),
-      ...(props.formValues.Senha && { senha: props.formValues.Senha }),
+      email: props.formValues.Email,
+      senha: props.formValues.Senha,
     };
+
     console.log('Dados a serem enviados:', dataToSend);
 
     try {
       const response = await axios.post(`${API_URL}/${props.rota}`, dataToSend);
-      if (response.status === 200 || 201) {
+      if (response.status === 200 || response.status === 201) {
+        const { uid } = response.data; // Presumindo que o UID está retornado na resposta
+            const userData = {
+                nome: props.formValues.Nome,
+                email: props.formValues.Email,
+                uid: uid,
+            };
+            console.log(userData,uid)
+
+            // Verifica se o uid e userData não estão undefined
+            if (uid && userData) {
+                await AsyncStorage.setItem('userId', uid);
+                await AsyncStorage.setItem('userData', JSON.stringify(userData)); // Armazena como string
+            } else {
+                console.error('UID ou dados do usuário não estão disponíveis.');
+            }
+        setModalVisible(true);
         props.onReset && props.onReset();
       } else {
         console.error('Erro na resposta:', response);
       }
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        console.error('Erro ao enviar dados:', error.response?.data || error.message);
+        const axiosError = error as AxiosError;
+        console.error('Erro ao enviar dados:', axiosError.response?.data || axiosError.message);
       } else {
         console.error('Erro ao enviar dados:', error);
       }
@@ -48,8 +62,8 @@ export default function BtnSalvarUsuario(props: Props) {
 
   const closeModal = () => {
     setModalVisible(false);
-    if (props.onReset) {
-      props.onReset();
+    if (props.onRedirect) {
+      props.onRedirect();
     }
   };
 
@@ -58,32 +72,19 @@ export default function BtnSalvarUsuario(props: Props) {
       <TouchableOpacity
         style={styles.btn}
         onPress={() => {
-          // Executa a validação antes de enviar
-          if (props.onPress) {
-            const isValid = props.onPress(); // Executa a função de validação passada como prop
-            if (isValid) {
-              handleSubmit(); // Se for válido, chama a função de envio
-            } else {
-              console.log('A validação falhou. Não enviar o formulário.');
-            }
-          } else {
-            handleSubmit(); // Caso não tenha onPress (validação), apenas envia
-          }
+          handleSubmit();
+          props.onPress && props.onPress();
         }}
       >
-        <View style={styles.btnContent}>
-          <Text style={styles.btnText}>Salvar</Text>
-        </View>
+        <Text style={styles.btnText}>{props.nome}</Text>
       </TouchableOpacity>
 
-      {modalVisible && (
-        <ModalSucesso
-          nome={props.nome}
-          tipoSucesso={props.tipoSucesso}
-          onClose={closeModal}
-          visible={modalVisible}
+      <ModalSucesso
+        visible={modalVisible}
+        tipoSucesso={props.tipoSucesso}
+        onClose={closeModal} 
+        nome={'Usuário'}      
         />
-      )}
     </View>
   );
 }

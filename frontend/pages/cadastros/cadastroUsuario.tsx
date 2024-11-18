@@ -1,9 +1,10 @@
-import { StyleSheet, Text, View, KeyboardAvoidingView, Platform, Keyboard, TextInput, ScrollView } from "react-native";
+import { StyleSheet, Text, View, KeyboardAvoidingView, Platform, Keyboard, TextInput, ScrollView, Alert } from "react-native";
 import { useState, useEffect } from "react";
 import { useNavigation } from '@react-navigation/native';
 import BtnSalvarUsuario from "../../components/btnSalvarUsuario";
 import { TouchableOpacity } from "react-native";
 import Icon from "react-native-vector-icons/Feather";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function CadastroUsuario() {
     const initialValues = {
@@ -15,6 +16,7 @@ export default function CadastroUsuario() {
     const [formValues, setFormValues] = useState<{ [key: string]: string }>(initialValues);
     const [isKeyboardVisible, setKeyboardVisible] = useState(false);
     const [isEmpty, setIsEmpty] = useState<{ [key: string]: boolean }>({});
+    const [userUID, setUserUID] = useState<string | null>(null); // Adiciona o UID ao estado
 
     const navigation = useNavigation<any>();
 
@@ -32,33 +34,29 @@ export default function CadastroUsuario() {
     const validateFields = () => {
         const emptyFields = {
             Nome: !formValues.Nome,
-            Email: !verifyEmail(formValues.Email), // Verifica apenas a validade do email
+            Email: !verifyEmail(formValues.Email), 
             Senha: !verifyPassword(formValues.Senha),
         };
         setIsEmpty(emptyFields);
         return Object.values(emptyFields).every((isEmpty) => !isEmpty);
-    };    
+    };
 
     const verifyEmail = (email: string) => {
-        // Verifica se o email é válido
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        
         if (emailRegex.test(email)) {
-            // Se for válido, ajusta o estado para não vazio (campo preenchido corretamente)
             setIsEmpty((prevValues) => ({
                 ...prevValues,
                 Email: false,
             }));
             return true;
         } else {
-            // Caso contrário, marca o campo como vazio ou inválido
             setIsEmpty((prevValues) => ({
                 ...prevValues,
                 Email: true,
             }));
             return false;
         }
-    };    
+    };
 
     const verifyPassword = (senha: string) => {
         if (senha.length < 6) {
@@ -76,8 +74,38 @@ export default function CadastroUsuario() {
         }
     };
 
-    const handleRedirect = () => {
-        navigation.navigate('Login');
+    const handleRedirect = async () => {
+        const isValid = validateFields();
+        if (isValid) {
+            const generatedUID = "12345"; // Substitua isso pelo UID real gerado após o cadastro
+            setUserUID(generatedUID);
+    
+            // Salva os dados de login no AsyncStorage
+            await AsyncStorage.setItem("userId", generatedUID);
+            await AsyncStorage.setItem("userEmail", formValues.Email); // Armazena o email
+            await AsyncStorage.setItem("userPassword", formValues.Senha); // Armazena a senha
+    
+            Alert.alert(
+                "Habilitar Biometria",
+                "Você deseja habilitar a autenticação biométrica?",
+                [
+                    { text: "Não", style: "cancel" },
+                    { 
+                        text: "Sim", 
+                        onPress: async () => {
+                            await registerBiometric(generatedUID);
+                            navigation.navigate('Login');
+                        }
+                    }
+                ]
+            );
+        }
+    };       
+
+    const registerBiometric = async (uid: string) => {
+        await AsyncStorage.setItem("biometricEnabled", 'true');
+        await AsyncStorage.setItem("userUID", uid); // Salva o UID do usuário
+        Alert.alert("Biometria habilitada com sucesso!");
     };
 
     useEffect(() => {
@@ -143,13 +171,7 @@ export default function CadastroUsuario() {
                         <BtnSalvarUsuario
                             nome={'Salvar'}
                             tipoSucesso={'cadastrada'}
-                            onPress={() => {
-                                const isValid = validateFields();
-                                if (isValid) {
-                                    handleRedirect();
-                                }
-                                return isValid;
-                            }}
+                            onPress={handleRedirect}
                             formValues={formValues}
                             rota='cadastro/usuario'
                         />
@@ -191,8 +213,8 @@ const styles = StyleSheet.create({
     },
     form: {
         width: '75%',
-        height: 'auto', // Define a altura como automática para evitar distorções
-        maxHeight: '80%', // Limita a altura do formulário em até 80% da tela
+        height: 'auto', 
+        maxHeight: '80%', 
         borderRadius: 10,
         borderWidth: 1,
         borderColor: '#D9D9D9',

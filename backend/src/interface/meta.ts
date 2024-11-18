@@ -5,5 +5,4 @@ export interface Meta {
     valorAtual: number;
     data: string;
     userId: string;
-    porcentagem: number;
 }

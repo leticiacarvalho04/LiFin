@@ -12,7 +12,7 @@ interface Props {
   onReset?: () => void;
   rota: string;
   formValues: any;
-  onPress?: () => boolean; // Função de validação deve retornar um booleano
+  onPress?: () => boolean; 
   onRedirect ?: string;
   categoria?: Categoria[];
 }
