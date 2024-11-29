@@ -39,16 +39,16 @@ export default function PainelMetas() {
             headers: { Authorization: `Bearer ${token}` },
         });
 
-        const despesasFirestore = response.data.map((meta: Meta): Meta => ({
+        const metasFirestore = response.data.map((meta: Meta): Meta => ({
             ...meta,
             data: meta.data
                 ? meta.data.split("T")[0].split("-").reverse().join("-")
                 : "",
         }));
 
-        setMetas(despesasFirestore);
-        setPainelValues(despesasFirestore);
-        await AsyncStorage.setItem("metas", JSON.stringify(despesasFirestore));
+        setMetas(metasFirestore);
+        setPainelValues(metasFirestore);
+        await AsyncStorage.setItem("metas", JSON.stringify(metasFirestore));
     } catch (error) {
         console.error("Erro ao buscar metas:", error);
     }
