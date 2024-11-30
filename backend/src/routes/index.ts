@@ -41,6 +41,7 @@ router.put("/atualizar/despesa/:id", autenticarToken, DespesaController.atualiza
 router.put("/atualizar/receita/:id", autenticarToken, ReceitaController.atualizarReceita);
 router.put("/atualizar/gastoFixo/:id", autenticarToken, ControllerGastosFixos.atualizarGastosFixos);
 router.put("/atualizar/meta/:id", autenticarToken, ControllerMeta.atualizarMeta);
+router.put("/atualizar/orcamento/:id", autenticarToken, ControllerOrcamento.atualizarOrcamento);
 
 router.delete("/excluir/usuario", autenticarToken, UsuarioController.deletarUsuario);
 router.delete("/excluir/despesa/categoria/:id", autenticarToken, CategoriaDespesaController.excluirCategoria);
@@ -49,5 +50,6 @@ router.delete("/excluir/despesa/:id", autenticarToken, DespesaController.deletar
 router.delete("/excluir/receita/:id", autenticarToken, ReceitaController.deletarReceita);
 router.delete("/excluir/gastoFixo/:id", autenticarToken, ControllerGastosFixos.deletarGastosFixos);
 router.delete("/excluir/meta/:id", autenticarToken, ControllerMeta.deletarMeta);
+router.delete("/excluir/orcamento/:id", autenticarToken, ControllerOrcamento.deletarOrcamento);
 
 export default router;

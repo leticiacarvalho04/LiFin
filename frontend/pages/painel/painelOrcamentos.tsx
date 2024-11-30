@@ -1,6 +1,7 @@
 import { SafeAreaView, StyleSheet, Text, View } from "react-native";
 import Layout from "../../components/layout";
 import DonutChart from "../../components/donutChart";
+import { API_URL } from "../../api";
 
 export default function PainelOrcamentos() {
     return (
@@ -9,7 +10,7 @@ export default function PainelOrcamentos() {
                 <Text>Painel de Orçamentos</Text>
             </View>
             <SafeAreaView style={styles.container}>
-                <DonutChart/>
+                <DonutChart url={`${API_URL}/orcamentos`}/>
             </SafeAreaView>
         </Layout>
     );
