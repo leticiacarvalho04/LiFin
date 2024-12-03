@@ -2,8 +2,12 @@ import { Response } from "express";
 import { AuthenticatedRequest } from "../middleware/autenticarToken";
 import { db } from "../config";
 import { Orcamento } from "../interface/orcamento";
+import Despesas from "../interface/despesas";
+import Receitas from "../interface/receitas";
 
 const colecaoOrcamento = db.collection("orcamento");
+const colecaoDespesas = db.collection("despesas");
+const colecaoReceitas = db.collection("receitas");
 
 export class ControllerOrcamento {
     static async cadastrarOrcamento(req: AuthenticatedRequest, res: Response) {
@@ -88,6 +92,60 @@ export class ControllerOrcamento {
         }
     }
 
+    static async listarGraficoRenda(req: AuthenticatedRequest, res: Response): Promise<Response> {
+        try {
+            // Verifica se o usuário está autenticado
+            if (!req.usuarioAutenticado) {
+                return res.status(401).json({ erro: "Usuário não autenticado" });
+            }
+    
+            const userId = req.usuarioAutenticado.uid;
+    
+            // Função utilitária para converter valores no formato brasileiro para números
+            const parseValor = (valor: string): number => {
+                return parseFloat(valor.replace(/\./g, "").replace(",", "."));
+            };
+    
+            // Busca todas as despesas do usuário
+            const despesasSnapshot = await colecaoDespesas.where("userId", "==", userId).get();
+            const totalDespesas = despesasSnapshot.docs.reduce((total, doc) => {
+                const despesa = doc.data() as Despesas;
+                const valor = parseValor(despesa.valor); // Converte para número
+                return total + valor;
+            }, 0);
+    
+            // Busca todas as receitas do usuário
+            const receitasSnapshot = await colecaoReceitas.where("usuarioId", "==", userId).get();
+            const totalReceitas = receitasSnapshot.docs.reduce((total, doc) => {
+                const receita = doc.data() as Receitas;
+                const valor = parseValor(receita.valor); // Converte para número
+                return total + valor;
+            }, 0);
+    
+            console.log("Total despesas:", totalDespesas);
+            console.log("Total receitas:", totalReceitas);
+    
+            // Calcula a porcentagem com base no menor valor em relação ao maior
+            let porcentagem = 0;
+            if (totalDespesas > 0 && totalReceitas > 0) {
+                const menorValor = Math.min(totalDespesas, totalReceitas);
+                const maiorValor = Math.max(totalDespesas, totalReceitas);
+                porcentagem = (menorValor * 100) / maiorValor;
+            }
+    
+            // Retorna os resultados
+            return res.status(200).json({
+                totalDespesas,
+                totalReceitas,
+                porcentagem,
+            });
+        } catch (erro) {
+            console.error("Erro ao listar gráfico de renda:", erro);
+            return res.status(500).json({ erro: "Falha ao calcular dados do gráfico de renda" });
+        }
+    }
+    
+    
     static async atualizarOrcamento(req: AuthenticatedRequest, res: Response): Promise<Response> {
         try {
             const { id } = req.params;
