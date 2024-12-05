@@ -4,10 +4,12 @@ import { db } from "../config";
 import { Orcamento } from "../interface/orcamento";
 import Despesas from "../interface/despesas";
 import Receitas from "../interface/receitas";
+import { GastosFixos } from "../interface/gastosFixos";
 
 const colecaoOrcamento = db.collection("orcamento");
 const colecaoDespesas = db.collection("despesas");
 const colecaoReceitas = db.collection("receitas");
+const colecaoGastosFixos = db.collection('gastosFixos');
 
 export class ControllerOrcamento {
     static async cadastrarOrcamento(req: AuthenticatedRequest, res: Response) {
@@ -56,6 +58,7 @@ export class ControllerOrcamento {
                 total,
                 userId,
                 gastosFixosId: dados.gastosFixosId,
+                gastosFixos: gastosSnapshot.filter((gasto) => gasto !== null),
                 valorTotal: dados.valorTotal,
                 rendaExtra: dados.rendaExtra,
                 gastosFixosPorcentagem,
@@ -84,6 +87,7 @@ export class ControllerOrcamento {
             const orcamento = orcamentoSnapshot.docs.map((doc) => ({
                 id: doc.id,
                 ...doc.data(),
+                gastosFixos: doc.data().gastosFixos || [],
             }));
 
             return res.status(200).json(orcamento);
@@ -145,6 +149,85 @@ export class ControllerOrcamento {
         }
     }
     
+    static async listarGraficoGastosFixos(req: AuthenticatedRequest, res: Response): Promise<Response> {
+        try {
+            // Verifica se o usuário está autenticado
+            if (!req.usuarioAutenticado) {
+                return res.status(401).json({ erro: "Usuário não autenticado" });
+            }
+    
+            const userId = req.usuarioAutenticado.uid;
+    
+            // Busca os orçamentos do usuário autenticado
+            const orcamentoSnapshot = await colecaoOrcamento
+                .where("userId", "==", userId)
+                .get();
+    
+            if (orcamentoSnapshot.empty) {
+                return res.status(404).json({ erro: "Nenhum orçamento encontrado." });
+            }
+    
+            // Itera sobre todos os orçamentos encontrados
+            const orcamentosComGastosFixos = await Promise.all(
+                orcamentoSnapshot.docs.map(async (orcamentoDoc) => {
+                    const orcamento = orcamentoDoc.data() as Orcamento;
+                    console.log('Orçamento:', orcamento);
+    
+                    // Verifica se gastosFixosId é um array
+                    if (!Array.isArray(orcamento.gastosFixosId)) {
+                        return null; // Ignora orçamentos com dados de gastos fixos inválidos
+                    }
+                    console.log("Gastos fixos:", orcamento.gastosFixosId);
+    
+                    // Busca os gastos fixos associados ao orçamento
+                    const gastosFixosDocs = await Promise.all(
+                        orcamento.gastosFixosId.map(async (id) => {
+                            const gastoDoc = await colecaoGastosFixos.doc(id).get();
+                            return gastoDoc.exists ? { id: gastoDoc.id, ...(gastoDoc.data() as GastosFixos) } : null;
+                        })
+                    );
+    
+                    // Filtra os gastos válidos
+                    const gastosFixos = gastosFixosDocs.filter((gasto) => gasto !== null) as GastosFixos[];
+    
+                    if (gastosFixos.length === 0) {
+                        return null; // Ignora orçamentos sem gastos fixos
+                    }
+    
+                    // Calcula o total dos gastos fixos
+                    const totalGastosFixos = gastosFixos.reduce((total, gasto) => total + gasto.valor, 0);
+    
+                    // Calcula a porcentagem de cada gasto fixo
+                    const porcentagens = gastosFixos.map((gasto) => ({
+                        id: gasto.id,
+                        nome: gasto.nome,
+                        valor: gasto.valor,
+                        porcentagem: ((gasto.valor * 100) / totalGastosFixos).toFixed(2),
+                    }));
+    
+                    return {
+                        id: orcamentoDoc.id,
+                        nome: orcamento.id,
+                        totalGastosFixos,
+                        gastosFixos: porcentagens,
+                    };
+                })
+            );
+    
+            // Filtra orçamentos que não possuem dados válidos
+            const orcamentosValidos = orcamentosComGastosFixos.filter((orcamento) => orcamento !== null);
+    
+            if (orcamentosValidos.length === 0) {
+                return res.status(404).json({ erro: "Nenhum orçamento válido encontrado." });
+            }
+    
+            // Retorna os orçamentos com os gastos fixos e porcentagens calculadas
+            return res.status(200).json({ orcamentos: orcamentosValidos });
+        } catch (erro) {
+            console.error("Erro ao listar gráfico de gastos fixos:", erro);
+            return res.status(500).json({ erro: "Falha ao listar gráfico de gastos fixos." });
+        }
+    }
     
     static async atualizarOrcamento(req: AuthenticatedRequest, res: Response): Promise<Response> {
         try {
@@ -190,6 +273,7 @@ export class ControllerOrcamento {
                 total,
                 userId: req.usuarioAutenticado.uid,
                 gastosFixosId: dados.gastosFixosId,
+                gastosFixos: gastosSnapshot.filter((gasto) => gasto !== null),
                 valorTotal: dados.valorTotal,
                 rendaExtra: dados.rendaExtra,
                 gastosFixosPorcentagem,

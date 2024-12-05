@@ -34,6 +34,7 @@ router.get("/gastos", autenticarToken, ControllerGastosFixos.listarGastosFixos);
 router.get("/metas", autenticarToken, ControllerMeta.listarMetas);
 router.get("/orcamentos", autenticarToken, ControllerOrcamento.listarOrcamento);
 router.get("/orcamento/grafico", autenticarToken, ControllerOrcamento.listarGraficoRenda);
+router.get("/orcamento/grafico/gastos", autenticarToken, ControllerOrcamento.listarGraficoGastosFixos);
 
 router.put("/atualizar/usuario", autenticarToken, UsuarioController.atualizarUsuario);
 router.put("/atualizar/despesa/categoria/:id", autenticarToken, CategoriaDespesaController.editarCategoria);
