@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Image, ActivityIndicator } from "react-native";
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Image, ActivityIndicator, ScrollView } from "react-native";
 import Layout from "../../components/layout";
 import { LinearGradient } from "expo-linear-gradient";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -95,66 +95,68 @@ export default function Home() {
 
   return (
     <Layout>
-      <View style={styles.container}>
-        <LinearGradient
-          colors={["#a64ac9", "#6b6bbd", "#3d9be9", "#41e8d1"]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={styles.gradientContainer}
-        >
-          <SafeAreaView style={styles.safeAreaContainer}>
-            {/* Gráfico de Receitas e Despesas */}
-            {orcamento && !loading && (
-              <View style={styles.chartContainer}>
-                <DonutChart
-                  showLabels={false}
-                  data={orcamento.dadosGrafico}
-                />
-                <View style={styles.chartTextContainer}>
-                  <Text style={styles.textTop}>Despesas</Text>
-                  <Text style={styles.textBottom}>{orcamento.porcentagem}%</Text>
+      <ScrollView style={styles.scrollViewContainer}>
+        <View style={styles.container}>
+          <LinearGradient
+            colors={["#a64ac9", "#6b6bbd", "#3d9be9", "#41e8d1"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.gradientContainer}
+          >
+            <SafeAreaView style={styles.safeAreaContainer}>
+              {/* Gráfico de Receitas e Despesas */}
+              {orcamento && !loading && (
+                <View style={styles.chartContainer}>
+                  <DonutChart
+                    showLabels={false}
+                    data={orcamento.dadosGrafico}
+                  />
+                  <View style={styles.chartTextContainer}>
+                    <Text style={styles.textTop}>Despesas</Text>
+                    <Text style={styles.textBottom}>{orcamento.porcentagem}%</Text>
+                  </View>
                 </View>
-              </View>
-            )}
+              )}
 
-            {/* Carregando Spinner */}
-            {loading && <ActivityIndicator size="large" color="#3d9be9" />}
-          </SafeAreaView>
-        </LinearGradient>
+              {/* Carregando Spinner */}
+              {loading && <ActivityIndicator size="large" color="#3d9be9" />}
+            </SafeAreaView>
+          </LinearGradient>
 
-        {/* Texto de Boas-vindas e Descrição */}
-        <View style={styles.container1}>
-          <Text style={styles.textinho1}>Bem-vindo(a) ao LiFin!</Text>
-          <Text style={styles.textinho}>Sobre:</Text>
+          {/* Texto de Boas-vindas e Descrição */}
+          <View style={styles.container1}>
+            <Text style={styles.textinho1}>Bem-vindo(a) ao LiFin!</Text>
+            <Text style={styles.textinho}>Sobre:</Text>
 
-          <View style={styles.descriptionContainer}>
-            <Text style={styles.descriptionText}>
-              O LiFin é um aplicativo de finanças pessoais que organiza receitas, despesas e orçamentos de
-              forma simples. Ele oferece gráficos interativos e relatórios detalhados para ajudar no controle
-              financeiro. Ideal para quem busca tomar decisões financeiras mais informadas e alcançar seus
-              objetivos.
-            </Text>
-          </View>
+            <View style={styles.descriptionContainer}>
+              <Text style={styles.descriptionText}>
+                O LiFin é um aplicativo de finanças pessoais que organiza receitas, despesas e orçamentos de
+                forma simples. Ele oferece gráficos interativos e relatórios detalhados para ajudar no controle
+                financeiro. Ideal para quem busca tomar decisões financeiras mais informadas e alcançar seus
+                objetivos.
+              </Text>
+            </View>
 
-          <View style={styles.cardsContainer}>
-            <TouchableOpacity
-              style={styles.card}
-              onPress={() => handleNavigation("CadastroDespesasReceitas")}
-            >
-              <Image source={pencilIcon} style={styles.cardIcon} />
-              <Text style={styles.cardText}>Anotar Despesas</Text>
-            </TouchableOpacity>
+            <View style={styles.cardsContainer}>
+              <TouchableOpacity
+                style={styles.card}
+                onPress={() => handleNavigation("CadastroDespesasReceitas")}
+              >
+                <Image source={pencilIcon} style={styles.cardIcon} />
+                <Text style={styles.cardText}>Anotar Despesas</Text>
+              </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.card}
-              onPress={() => handleNavigation("PainelDespesasReceitas")}
-            >
-              <Image source={folderIcon} style={styles.cardIcon} />
-              <Text style={styles.cardText}>Painel de Despesas</Text>
-            </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.card}
+                onPress={() => handleNavigation("PainelDespesasReceitas")}
+              >
+                <Image source={folderIcon} style={styles.cardIcon} />
+                <Text style={styles.cardText}>Painel de Despesas</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
-      </View>
+      </ScrollView>
     </Layout>
   );
 }
@@ -164,13 +166,14 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#f8f8f8", // Cor de fundo mais suave para a página
   },
-  container1: {
+  scrollViewContainer: {
     flex: 1,
+  },
+  container1: {
     alignItems: "center",
     justifyContent: "center",
     padding: 20,
-    paddingTop: 80, 
-    marginTop: 0, 
+    paddingTop: 80,
   },
   gradientContainer: {
     height: 300,
@@ -210,65 +213,66 @@ const styles = StyleSheet.create({
   descriptionContainer: {
     padding: 10,
     alignItems: "center",
-    marginTop: 30, // Aumentei o espaçamento para dar destaque ao texto
+    marginTop: 30,
     borderRadius: 10,
-    backgroundColor: "#fff", // Cor de fundo para destacar a descrição
-    shadowColor: "#000", // Adicionei sombra para dar profundidade
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 3, // Sombra visível no Android
+    backgroundColor: "transparent", // Remover fundo
+    width: "100%",
   },
   descriptionText: {
     fontSize: 16,
     color: "#333",
     lineHeight: 24,
     fontWeight: "400",
-    textAlign: "center", // Centraliza o texto para melhor visualização
-    maxWidth: 350, // Limita a largura do texto
+    textAlign: "left", // Alinhar à esquerda
+    maxWidth: 350,
+    width: "95%",
   },
   textinho: {
     fontSize: 20,
     fontWeight: "500",
     marginTop: 10,
-    marginBottom: 10,
     color: "#333",
-  },
+    textAlign: "left", // Alinha o texto à esquerda
+    width: "90%", // Garante que o texto ocupe toda a largura disponível
+  },  
   textinho1: {
     fontSize: 30,
     fontWeight: "600",
     marginTop: 0,
+    paddingTop: 0,
     marginBottom: 15,
     color: "#333",
+    textAlign: "center", // Manter centralizado
   },
   cardsContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
     marginTop: 20,
-    paddingHorizontal: 20,
-    gap: 130,
+    width: "100%",
   },
   card: {
-    width: 120,
-    height: 150,
-    backgroundColor: "#fff",
-    borderRadius: 10,
+    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    paddingVertical: 15,
+    paddingHorizontal: 20,
     elevation: 3,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.1,
     shadowRadius: 5,
+    flex: 1,
+    marginHorizontal: 10,
   },
   cardIcon: {
-    width: 40,
-    height: 40,
-    marginBottom: 10,
+    width: 30,
+    height: 30,
+    marginRight: 10,
   },
   cardText: {
-    fontSize: 14,
-    fontWeight: "600",
+    fontSize: 16,
     color: "#333",
+    fontWeight: "600",
   },
 });
