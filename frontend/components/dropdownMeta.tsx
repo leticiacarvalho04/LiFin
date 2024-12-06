@@ -96,7 +96,7 @@ const DropdownMetas: React.FC<DropdownProps> = ({
               <ProgressBar progress={meta.porcentagem} />
               <View>
                 <Text style={styles.porcentagem}>
-                  {formatarPorcentagem(meta.porcentagem)}%
+                  {formatarPorcentagem(meta.porcentagem)}
                 </Text>
               </View>
             </>

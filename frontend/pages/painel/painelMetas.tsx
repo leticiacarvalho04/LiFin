@@ -29,28 +29,26 @@ export default function PainelMetas() {
 
   const fetchMetas = async () => {
     try {
-        const token = await AsyncStorage.getItem("token");
-        if (!token) {
-            console.log("Token não encontrado. Redirecionando para login.");
-            return;
-        }
+      const token = await AsyncStorage.getItem("token");
+      if (!token) {
+        console.log("Token não encontrado. Redirecionando para login.");
+        return;
+      }
 
-        const response = await axios.get(`${API_URL}/metas`, {
-            headers: { Authorization: `Bearer ${token}` },
-        });
+      const response = await axios.get(`${API_URL}/metas`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-        const metasFirestore = response.data.map((meta: Meta): Meta => ({
-            ...meta,
-            data: meta.data
-                ? meta.data.split("T")[0].split("-").reverse().join("-")
-                : "",
-        }));
+      const metasFirestore = response.data.map((meta: Meta): Meta => ({
+        ...meta,
+        data: meta.data ? meta.data.split("T")[0].split("-").reverse().join("-") : "",
+      }));
 
-        setMetas(metasFirestore);
-        setPainelValues(metasFirestore);
-        await AsyncStorage.setItem("metas", JSON.stringify(metasFirestore));
+      setMetas(metasFirestore);
+      setPainelValues(metasFirestore);
+      await AsyncStorage.setItem("metas", JSON.stringify(metasFirestore));
     } catch (error) {
-        console.error("Erro ao buscar metas:", error);
+      console.error("Erro ao buscar metas:", error);
     }
   };
 
@@ -81,7 +79,7 @@ export default function PainelMetas() {
       }
     }
   }, [editedMeta?.valorAtual, editedMeta?.valorTotal]);
-  
+
   useEffect(() => {
     if (isFocused) {
       fetchMetas();
@@ -94,58 +92,56 @@ export default function PainelMetas() {
   };
 
   const handleEdit = (index: number) => {
-      setIsEditing(index);
-      setEditedMeta(metas[index]);
+    setIsEditing(index);
+    setEditedMeta(metas[index]);
   };
-  
+
   const handleSave = async () => {
     if (editedMeta && isEditing !== null) {
-        try {
-            const token = await AsyncStorage.getItem("token");
-            if (!token) {
-                console.log("Token não encontrado. Redirecionando para login.");
-                navigation.navigate('Login');
-                return;
-            }
-
-            // Formatar a data no formato DD-MM-AAAA antes de enviar
-            const metaComDataFormatada = {
-                ...editedMeta,
-                nome: editedMeta.nome, // Certifique-se de incluir o nome editado
-                data: editedMeta.data
-                    ? editedMeta.data.split("-").reverse().join("-") // ISO (YYYY-MM-DD) para DD-MM-AAAA
-                    : "",
-            };
-
-            const dadosAtualizados: Meta = {
-                ...metas[isEditing], // Mantém os valores antigos
-                ...metaComDataFormatada, // Sobrescreve com os valores editados e a data formatada
-            };
-
-            // Enviar a requisição PUT ao backend
-            const response = await axios.put(
-                `${API_URL}/atualizar/meta/${editedMeta.id}`,
-                dadosAtualizados,
-                { headers: { Authorization: `Bearer ${token}` } }
-            );
-
-            const updatedMeta = response.data;
-
-            // Atualiza apenas a meta específica no estado
-            const updatedMetas = metas.map((meta, index) =>
-                index === isEditing ? updatedMeta : meta
-            );
-
-            setMetas(updatedMetas);
-            setIsEditing(null);
-            setEditedMeta(null);
-
-            setModalVisible(true); // Exibir modal de sucesso
-        } catch (error) {
-            console.error("Erro ao salvar meta:", error);
+      try {
+        const token = await AsyncStorage.getItem("token");
+        const userId = await AsyncStorage.getItem("userId");  // Supondo que o userId está armazenado no AsyncStorage
+  
+        if (!token || !userId) {
+          console.log("Token ou userId não encontrado. Redirecionando para login.");
+          navigation.navigate("Login");
+          return;
         }
+  
+        // Formatar a data no formato DD-MM-AAAA antes de enviar
+        const metaComDataFormatada = {
+          ...editedMeta,
+          nome: editedMeta.nome, // Certifique-se de incluir o nome editado
+          // Garantir que a data esteja no formato DD-MM-AAAA
+          data: editedMeta.data
+            ? editedMeta.data.split("-").reverse().join("-") // De ISO (YYYY-MM-DD) para DD-MM-AAAA
+            : "",
+          userId,  // Incluir userId no objeto enviado
+        };
+  
+        // Enviar a requisição PUT ao backend
+        const response = await axios.put(
+          `${API_URL}/atualizar/meta/${editedMeta.id}`,
+          editedMeta,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        console.log(response.data);
+  
+        // Atualiza a meta específica no estado
+        const updatedMetas = metas.map((meta, index) =>
+          index === isEditing ? { ...meta, ...metaComDataFormatada } : meta
+        );
+  
+        setMetas(updatedMetas);
+        setIsEditing(null);
+        setEditedMeta(null);
+  
+        setModalVisible(true); // Exibir modal de sucesso
+      } catch (error) {
+        console.error("Erro ao salvar meta:", error);
+      }
     }
-  };
+  };  
 
   const confirmDelete = async () => {
     if (metaToDelete) {
@@ -153,7 +149,7 @@ export default function PainelMetas() {
         const token = await AsyncStorage.getItem("token");
         if (!token) {
           console.log("Token não encontrado. Redirecionando para login.");
-          navigation.navigate('Login');
+          navigation.navigate("Login");
           return;
         }
 
@@ -170,16 +166,16 @@ export default function PainelMetas() {
         console.error("Erro ao deletar meta:", error);
       }
     }
-  }
+  };
 
   const handleCloseModal = () => {
     setModalVisible(false);
-  }
+  };
 
   const handleCloseConfirmModal = () => {
     setIsConfirmDelete(false);
     setMetaToDelete(null);
-  }
+  };
 
   return (
     <Layout>
@@ -194,29 +190,29 @@ export default function PainelMetas() {
         </View>
         {metas.map((meta, index) => (
           <DropdownMetas
-          key={index}
-          meta={meta}
-          isEditing={isEditing === index}
-          onEdit={() => handleEdit(index)}
-          onDelete={() => handleDelete(meta)}
-          onSave={handleSave}
-          onCancel={() => setIsEditing(null)}
-          onInputChange={handleInputChange}
-          onDateChange={(date) => handleInputChange("data", date)}
-      />
-      ))}
+            key={index}
+            meta={meta}
+            isEditing={isEditing === index}
+            onEdit={() => handleEdit(index)}
+            onDelete={() => handleDelete(meta)}
+            onSave={handleSave}
+            onCancel={() => setIsEditing(null)}
+            onInputChange={handleInputChange}
+            onDateChange={(date) => handleInputChange("data", date)}
+          />
+        ))}
 
-        <ModalSucesso 
+        <ModalSucesso
           nome="Meta"
-          visible={modalVisible} 
-          tipoSucesso={`A meta foi atualizada com sucesso!`} 
-          onClose={handleCloseModal} 
+          visible={modalVisible}
+          tipoSucesso={`A meta foi atualizada com sucesso!`}
+          onClose={handleCloseModal}
         />
-        <ModalConfirmacaoDelete 
-          visible={confirmDeleteVisible} 
-          onClose={handleCloseConfirmModal} 
-          onConfirm={confirmDelete} 
-          nome={metaToDelete ? metaToDelete.nome : ''} 
+        <ModalConfirmacaoDelete
+          visible={confirmDeleteVisible}
+          onClose={handleCloseConfirmModal}
+          onConfirm={confirmDelete}
+          nome={metaToDelete ? metaToDelete.nome : ''}
         />
       </KeyboardAwareScrollView>
       <TouchableOpacity
@@ -228,6 +224,7 @@ export default function PainelMetas() {
     </Layout>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {
