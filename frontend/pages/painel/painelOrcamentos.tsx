@@ -23,21 +23,21 @@ export default function PainelOrcamentos() {
                     setLoading(false);
                     return;
                 }
-
+    
                 const response = await axios.get(`${API_URL}/orcamento/grafico`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
-
+    
                 const { totalDespesas, totalReceitas, porcentagem } = response.data;
-
+    
                 const maior = totalDespesas > totalReceitas ? "despesas" : "receitas";
                 const menor = totalDespesas > totalReceitas ? "receitas" : "despesas";
                 const descricao = `As ${maior} equivalem a ${porcentagem.toFixed(2)}% das ${menor}.`;
-
+    
                 setDescricaoPorcentagem(descricao);
                 setOrcamento({
                     ...response.data,
-                    porcentagem: porcentagem.toFixed(2),
+                    porcentagem: porcentagem.toFixed(2), // Ajuste aqui para arredondar a porcentagem
                 });
             } catch (error) {
                 console.error("Erro ao buscar dados do orçamento:", error);
@@ -45,7 +45,7 @@ export default function PainelOrcamentos() {
                 setLoading(false);
             }
         };
-
+    
         const fetchGraficosGastosFixos = async () => {
             try {
                 const token = await AsyncStorage.getItem("token");
@@ -123,8 +123,11 @@ export default function PainelOrcamentos() {
                     {/* Primeiro Gráfico: Receitas e Despesas */}
                     <Text style={styles.chartTitle}>Gráfico de Receitas e Despesas</Text>
                     <DonutChart
-                        data={[{ label: "Receita", value: parseFloat(orcamento.porcentagem), color: "#41e8d1" },
-                               { label: "Despesa", value: 100 - parseFloat(orcamento.porcentagem), color: "#3d9be9" }]}
+                        showLabels={true}
+                        data={[
+                            { label: "Receita", value: 100 - parseFloat(orcamento.porcentagem), color: "#41e8d1" }, // Agora a receita vem com o valor restante
+                            { label: "Despesa", value: parseFloat(orcamento.porcentagem), color: "#3d9be9" } // E a despesa com o valor original
+                        ]}
                     />
 
                     {/* Segundo Gráfico: Gastos Fixos, um para cada orçamento */}
@@ -133,6 +136,7 @@ export default function PainelOrcamentos() {
                             <View key={grafico.id}>
                                 <Text style={styles.chartTitle}>Gastos fixos do Orçamento {index + 1}</Text>
                                 <DonutChart
+                                    showLabels={true}
                                     data={grafico.gastosFixosGrafico.map((item: any) => ({
                                         label: item.label,
                                         value: parseFloat(item.value.toString()),  // Usando a porcentagem do gráfico

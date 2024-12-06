@@ -6,10 +6,11 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 interface DonutChartProps {
   url?: string; // URL da API
-  data?: { label: string; value: number; color: string }[];
+  data?: { label: string; value: number; color: string }[]; 
+  showLabels?: boolean; // Prop para controlar a exibição dos rótulos
 }
 
-const DonutChart: React.FC<DonutChartProps> = ({ url, data: propData }) => {
+const DonutChart: React.FC<DonutChartProps> = ({ url, data: propData, showLabels = true }) => {
   const size = 200; // Tamanho do gráfico
   const strokeWidth = 30; // Espessura do anel
   const radius = (size - strokeWidth) / 2; // Raio do círculo
@@ -79,17 +80,6 @@ const DonutChart: React.FC<DonutChartProps> = ({ url, data: propData }) => {
                       rotation={(startAngle / total) * 360}
                       origin={`${size / 2}, ${size / 2}`}
                     />
-                    {/* <SvgText
-                      x={textX}
-                      y={textY}
-                      fill={slice.color}
-                      fontSize="12"
-                      textAnchor="middle"
-                      alignmentBaseline="middle"
-                      transform={`rotate(${rotationAngle} ${textX} ${textY})`} // Rotaciona o texto
-                    >
-                      {percentage.toFixed(1)}%
-                    </SvgText> */}
                   </React.Fragment>
                 );
 
@@ -98,19 +88,20 @@ const DonutChart: React.FC<DonutChartProps> = ({ url, data: propData }) => {
               })}
             </G>
           </Svg>
-          <View style={styles.labels}>
-            {data.map((slice, index) => (
-              <Text key={index} style={[styles.label, { color: slice.color }]}>
-                {slice.label}: {slice.value}%
-              </Text>
-            ))}
-          </View>
+          {showLabels && (
+            <View style={styles.labels}>
+              {data.map((slice, index) => (
+                <Text key={index} style={[styles.label, { color: slice.color }]}>
+                  {slice.label}: {slice.value}%
+                </Text>
+              ))}
+            </View>
+          )}
         </>
       )}
     </View>
   );
 };
-
 
 const styles = StyleSheet.create({
   container: {
