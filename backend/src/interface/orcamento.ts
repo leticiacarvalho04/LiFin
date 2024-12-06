@@ -1,7 +1,7 @@
 export interface Orcamento {
     id?: string;
-    valorTotal: string;
-    rendaExtra: string;
-    gastosFixosId: string;
+    valorTotal: number;
+    rendaExtra: number;
+    gastosFixosId: [string];
     userId: string;
 }

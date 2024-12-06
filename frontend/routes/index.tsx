@@ -17,6 +17,7 @@ import PainelDespesasReceitas from '../pages/painel/PainelDespesasReceitas';
 import CadastroGastosFixos from '../pages/cadastros/cadastroGastosFixos';
 import PainelGastosFixos from '../pages/painel/painelGastosFixos';
 import CadastrarMetas from '../pages/cadastros/cadastroMetas';
+import CadastrarOrcamento from '../pages/cadastros/cadastroOrcamentos';
 
 export type RootStackParamList = {
   Login: undefined;
@@ -24,6 +25,7 @@ export type RootStackParamList = {
   CadastrarUsuario: undefined;
   Home: undefined;
   CadastroDespesasReceitas: undefined;
+  CadastrarOrcamento: undefined;
   PainelDespesasReceitas: undefined;
   Categorias: undefined;
   Metas: undefined;
@@ -50,6 +52,7 @@ export default function Routes() {
       <Stack.Screen name="Categorias" component={PainelCategoriasDespesasReceitas} />
       <Stack.Screen name="CadastrarCategoriaDespesa" component={CadastroDespesaCategoria} />
       <Stack.Screen name="CadastrarCategoriaReceita" component={CadastroReceitaCategoria} />
+      <Stack.Screen name="CadastrarOrcamento" component={CadastrarOrcamento} />
       <Stack.Screen name="CadastrarGastosFixos" component={CadastroGastosFixos} />
       <Stack.Screen name="CadastrarMetas" component={CadastrarMetas} />
       <Stack.Screen name="Metas" component={PainelMetas} />
